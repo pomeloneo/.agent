@@ -1,0 +1,23 @@
+.DS_Store
+*.log
+
+# Local credentials and machine-specific auth files.
+.env
+.env.*
+!.env.example
+.npmrc
+.netrc
+.git-credentials
+.aws/
+.docker/config.json
+.kube/config
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local caches and temporary output.
+.cache/
+tmp/
+temp/
+node_modules/
