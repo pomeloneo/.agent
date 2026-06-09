@@ -98,8 +98,11 @@ bytedcli goofy deploy list-channels --app-id 131716
 
 
 # 部署工单
-## 获取部署工单列表（需要 app-id)
+## 获取部署工单列表（--app-id 与 --channel-id 二选一；推荐只传 --channel-id）
 bytedcli --site cn goofy deploy list-deployments --app-id 21297
+bytedcli --site cn goofy deploy list-deployments --channel-id 3520795
+## 同时传 --app-id 与 --channel-id（channel-id 优先，app-id 被忽略并在文本输出有 note）
+bytedcli --site cn goofy deploy list-deployments --app-id 21297 --channel-id 3520795
 ## 获取具体工单的信息 （需要 deploy-id)
 bytedcli --site cn goofy deploy get-deployment --deploy-id 24913395
 ## 创建部署工单

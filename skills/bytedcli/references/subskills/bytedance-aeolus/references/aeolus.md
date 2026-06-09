@@ -13,7 +13,7 @@ bytedcli aeolus list-authorized [options]
 ```
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, mybd, sglark, usttpusts, usbd (required)
+- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, jplark, mybd, sglark, uspipo, usttpusts, usbd (required)
 - `-t, --type <type>` - Filter by type: dashboard, data_set
 - `--limit <limit>` - Number of results (default: 20)
 - `--offset <offset>` - Pagination offset (default: 0)
@@ -46,7 +46,7 @@ bytedcli aeolus resolve-report [options]
 ```
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, mybd, sglark, usttpusts, usbd (required when URL cannot infer region)
+- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, jplark, mybd, sglark, uspipo, usttpusts, usbd (required when URL cannot infer region)
 - `--url <aeolusUrl>` - Aeolus URL (`dataQuery` or `dashboard`)
 - `--app-id <appId>` - App ID (when not using URL)
 - `--report-id <reportId>` - Report ID (when not using URL)
@@ -88,7 +88,7 @@ bytedcli aeolus dataset-fields <datasetId> [options]
 - `datasetId` - Dataset ID (from list-authorized output)
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, mybd, sglark, usttpusts, usbd (required)
+- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, jplark, mybd, sglark, uspipo, usttpusts, usbd (required)
 - `--json` is a global option and must appear before `aeolus`
 
 **Examples:**
@@ -119,7 +119,7 @@ bytedcli aeolus dataset-model-info [options]
 ```
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, mybd, sglark, usttpusts, usbd (required)
+- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, jplark, mybd, sglark, uspipo, usttpusts, usbd (required)
 - `--app-id <appId>` - Aeolus app ID (required, from list-authorized JSON output `app.id`)
 - `--dataset-id <dataSetId>` - Dataset ID (required)
 - `--json` is a global option and must appear before `aeolus`
@@ -264,7 +264,7 @@ bytedcli aeolus report create [options]
 ```
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, mycis, hrbimycis, mybd, sglark, usttpusts, usbd (required)
+- `-r, --region <region>` - Region: cn, sg, va, mycis, jplark, hrbimycis, mybd, sglark, uspipo, usttpusts, usbd (required)
 - `--app-id <appId>` - Aeolus app ID (required)
 - `--dataset-id <datasetId>` - Dataset ID (required)
 - `--name <name>` - Saved query name (required)
@@ -364,7 +364,7 @@ bytedcli aeolus query <datasetId> <sql> [options]
 - `sql` - SQL query string
 
 **Options:**
-- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, mybd, sglark, usttpusts, usbd (required)
+- `-r, --region <region>` - Region: cn, sg, va, euttp, mycis, jplark, mybd, sglark, uspipo, usttpusts, usbd (required)
 - `--json` is a global option and must appear before `aeolus`
 - `--version <version>` - API version (default: "v2")
 - `--limit <limit>` - Limit rows in output (default: 100)
@@ -603,10 +603,15 @@ Default OpenAPI / QE **hostnames** (see `src/api/aeolus/site.ts`). Developer con
 | `va`        | US East (TikTok row)   | `https://aeolus-va.tiktok-row.net`    |
 | `euttp`     | EU-TTP / EU Compliance | `https://aeolus-eu-ttp.tiktok-eu.net` (office); `https://aeolus-eu-ttp.bytedance.net` (prod) |
 | `mycis`     | MYCIS                  | `https://aeolus-mycis.byteintl.net`   |
+| `jplark`    | Japan Lark             | `https://aeolus-jp-lark.bytedance.net` |
 | `mybd`      | MYBD                   | `https://aeolus-mybd.sinf.net`        |
 | `sglark`    | Singapore Lark         | `https://aeolus-sglark.bytedance.net` |
+| `uspipo`    | US PIPO                | `https://aeolus-uspipo.byteintl.net`  |
 | `usttpusts` | US TTP USTS            | `https://aeolus-tx.tiktok-usts.net`   |
 | `usbd`      | US ByteDance           | `https://aeolus-usbd.byteintl.net`    |
+
+Note: Aeolus `jplark` uses the CN ByteCloud session because its host is under `bytedance.net`; Coral/Hive/Manta `jplark` use the DataLeap `i18n-bd` session on `dataleap-jp.byteintl.net`.
+Note: `mycis`, `jplark`, and `uspipo` may require Aeolus product-side cookie bootstrap even after Titan Passport exchange; run `bytedcli --site i18n-bd auth login --session --auto --yes` for `mycis` / `uspipo`, and `bytedcli --site cn auth login --session --auto --yes` for `jplark` if product login is missing.
 
 ## Authentication
 

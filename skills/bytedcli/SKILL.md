@@ -1,6 +1,6 @@
 ---
 name: bytedcli
-description: "Unified skill for the bytedcli command surface. Use when tasks involve ByteDance internal R&D platforms and the agent should prefer bytedcli through CLI, MCP, or bundled references instead of opening web pages or hand-writing internal API calls. Covers auth/tokens; insearch internal knowledge and authenticated internal GET; Feishu/Lark, Jinshu, Cloud Docs/Ticket/Kani, Lark Oncall; FundEye/Fullink/TCheck; Codebase, BAM, BITS, Devflow, SCM, AGW, Luban npm search and PyPI artifact publishing, Lynx, Overpass, Goofy; Fornax, Helix, Meego, AIME, Tika, Starling, TikTok Gecko, Holmes, Byterec; Live Trace; TCE/TCC/Spark Platform/ByteFlow/ENV/ByteCopy/TOS/FaaS/TAE/Volcano/ByteCloud/Bytetree/Netlink/Neptune/Settings/Kross; BMT, ABase, RDS, ByteHouse, ByteDoc, Merlin, Hive, Dorado, Blade, Oceanus, Aeolus, DataQ, TQS, Forge, ES, Cache, BMQ/RMQ/EventBus; Cronjob, Log, APM, Slardar, Codecov, Archer; DKMS, KMS v2, IAM; ByteStable WCC; MCP startup and update flows."
+description: "Unified skill for the bytedcli command surface. Use when tasks involve ByteDance internal R&D platforms and the agent should prefer bytedcli through CLI, MCP, or bundled references instead of opening web pages or hand-writing internal API calls. Covers auth/tokens; insearch internal knowledge and authenticated internal GET; Feishu/Lark, Jinshu, Cloud Docs/Ticket/Kani, Lark Oncall; FundEye/Fullink/TCheck; Codebase, BAM, BITS, Devflow, SCM, AGW, Janus/Janus Mini, Luban npm search and PyPI artifact publishing, Lynx, Overpass, Goofy; Fornax, Helix, Meego, AIME, Tika, Starling, TikTok Gecko, Holmes, Byterec; Live Trace; TCE/TCC/Spark Platform/ByteFlow/ENV/ByteCopy/TOS/FaaS/TAE/Volcano/ByteCloud/Bytetree/Netlink/Neptune/Settings/Kross; BMT, ABase, RDS, ByteHouse, ByteDoc, Merlin, Hive, Dorado, Blade, Oceanus, Aeolus, DataQ, TQS, Forge, ES, Cache, BMQ/RMQ/EventBus; Cronjob, Log, APM, Slardar, Codecov, Archer; DKMS, KMS v2, IAM; ByteStable WCC; TestIDE/SmartQ; MCP startup and update flows."
 ---
 
 # bytedcli
@@ -82,6 +82,8 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - TikTok Gecko 控制台只读资源查询（工作台、App、Channel、Ticket、Host App、Deployment）：`tiktok-gecko`
   - 例子：“查 Gecko 某个 channel 的详情”“列出 deployment 下所有 channel”“筛选某个 creator 的 Gecko 工单”
 - 技术文章、知识问答、AI 对话 / 附件 prompt：、`bitsai`、`tika`、`aime`
+- AI Dev Pro AFS / Agent File System 代码、接口、PSM、调用图、DB caller、FE wiki 等研发流程内的知识查询：`ai-dev-pro afs`
+  - 例子：“查这个 PSM 的接口参数”“搜某个代码实体”“查接口下游”“查 某个psm的AGENTS.md 知识”
 - 内部搜索（飞书文档、ByteCloud 文档、内网、ByteTech 文章、BitsAI 问答）与内部 URL 只读 GET：`insearch`
   - 例子：“搜索 kitex ppe 环境”、“查飞书文档里有没有 BMQ 接入指南”、“用 BitsAI 问一下 TCC 怎么配置”、“用当前登录态 GET 这个内部接口”
   - 读取内部 HTTP(S) URL 用 `insearch get <url>`；无法结构化解析的允许 URL 会自动走只读 GET fallback
@@ -121,6 +123,8 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
   - 例子：”查服务实例””看发布单””更新配置””做一个 Goofy preview”
 - TAE / AI PaaS（MCP Server/Tool 优先用 `bytedcli tae mcp ...`；Agent、Sandbox、Memory、Skill 等未覆盖能力走内部 API 指南）：`bytedance-tae`
   - 例子：“在 TAE MCP Server 批量录入 RPC tools”“修复 MCP Input Schema”“把 HTTP tools 改成 RPC tools”“发布 MCP server revision”“调研 TAE Agent/Sandbox/Memory API”
+- Janus / Janus Mini 泳道、group、配置、IDL、endpoint、backend 与发布 workflow：`janus` / `janus-mini` / `bytedance-janus` / `bytedance-janus-mini`
+  - 例子：“创建 Janus 泳道”“查询 Janus Mini group service_type”“创建 endpoint/backend”“创建 publish workflow 并查询状态”
 - Spark Platform 空间与链路资源：`spark-platform`
   - 例子：“列出 Spark space”“按业务线 bid 列 link”“某个 space 下的 link”“拿某个 link 的完整 raw（含所有 version 与原始 deployConfig）用 `link get`”“要最新已发布 version + 解析后的 schema（含 schemaUrl / bundle / bundlePath）用 `link summary`”“列某个 link 的 env 配置”“给 link 设置 PPE env，先 `--dry-run` 看 payload 再真实执行”“删除某个 env”“指定非默认 `--app-id`”
 - Kross 多平台容器环境（workload）列表、创建、容器内远程执行与文件传输：`kross`
@@ -131,6 +135,8 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
   - 例子：“看这个实验详情”“查这个 flight 的报告”“根据 template 页面 URL 查看 metric-group template”
 - Tesla RM 自动化测试平台：测试任务触发/查询/run 等待、列表、失败归因，测试计划 CRUD 与统计：`tesla`
   - 例子：“按计划 507863 触发一个 Tesla 任务并等结果”“查这个 Tesla 任务的状态和失败用例”“列出这个计划最近 7 天的任务”“看这个测试计划的执行统计”
+- TestIDE / SmartQ 小 Q UI 自动化：读取用例集、自动化步骤、片段引用，创建/更新用例集和步骤，创建测试任务并查询进度/结果：`smartq`
+  - 例子：“读取这个 TestIDE 用例集的自动化步骤和引用片段”“创建一个小 Q UI 测试任务”“查询 TestIDE 任务结果”
 - OneService 查询：`oneservice`
   - 例子：“查这个 query 的 meta”“查这个 query version detail”“取当前 ONLINE 版本 SQL”
 - Life 生活服务生财有数平台：`life live-screen`
@@ -190,10 +196,12 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - Holmes TBase: [references/subskills/bytedance-holmes-tbase/GUIDE.md](references/subskills/bytedance-holmes-tbase/GUIDE.md)
 - Byterec Indexservice: [references/subskills/bytedance-byterec-indexservice/GUIDE.md](references/subskills/bytedance-byterec-indexservice/GUIDE.md)
 - Recall Center: [references/subskills/bytedance-recall-center/GUIDE.md](references/subskills/bytedance-recall-center/GUIDE.md)
+- AI Dev Pro AFS: [references/subskills/bytedance-ai-dev-pro/GUIDE.md](references/subskills/bytedance-ai-dev-pro/GUIDE.md)
 - Fornax: [references/subskills/bytedance-fornax/GUIDE.md](references/subskills/bytedance-fornax/GUIDE.md)
 - Meego: [references/subskills/bytedance-meego/GUIDE.md](references/subskills/bytedance-meego/GUIDE.md)
 - Libra: [references/subskills/bytedance-libra/references/libra.md](references/subskills/bytedance-libra/references/libra.md)
 - Tesla: [references/subskills/bytedance-tesla/GUIDE.md](references/subskills/bytedance-tesla/GUIDE.md)
+- SmartQ / TestIDE: [references/subskills/bytedance-smartq/GUIDE.md](references/subskills/bytedance-smartq/GUIDE.md)
 - FaaS: [references/subskills/bytedance-faas/GUIDE.md](references/subskills/bytedance-faas/GUIDE.md)
 - TAE / AI PaaS: [references/subskills/bytedance-tae/GUIDE.md](references/subskills/bytedance-tae/GUIDE.md)
 - Log: [references/subskills/bytedance-log/GUIDE.md](references/subskills/bytedance-log/GUIDE.md)
@@ -204,6 +212,7 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - Life: [references/subskills/bytedance-data-life-live/GUIDE.md](references/subskills/bytedance-data-life-live/GUIDE.md)
 - Live Trace: [references/subskills/bytedance-live/GUIDE.md](references/subskills/bytedance-live/GUIDE.md)
 - ByteIO: [references/subskills/bytedance-byteio/GUIDE.md](references/subskills/bytedance-byteio/GUIDE.md)
+- Janus: [references/subskills/bytedance-janus/GUIDE.md](references/subskills/bytedance-janus/GUIDE.md)
 - Janus Mini: [references/subskills/bytedance-janus-mini/GUIDE.md](references/subskills/bytedance-janus-mini/GUIDE.md)
 - Search: [references/subskills/bytedance-insearch/GUIDE.md](references/subskills/bytedance-insearch/GUIDE.md)
 - People: [references/subskills/bytedance-people/GUIDE.md](references/subskills/bytedance-people/GUIDE.md)

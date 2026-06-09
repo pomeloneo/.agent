@@ -9,6 +9,8 @@ Custom regions can be configured via `.dorado.env`:
 ```env
 DORADO_REGION_PIPOUS_API_BASE_URL=https://dataleap-pipous.example.net/dorado_api
 DORADO_REGION_PIPOUS_ALIASES=us_pipo,pipo-us,pipo_us,uspipo
+DORADO_REGION_PIPOUS_GROUP_NAME=sample_group
+DORADO_REGION_PIPOUS_PROJECT_PREFIX=sample_group
 
 # Optional: only set this for Dataleap environments that require browser-session cookies
 # DORADO_REGION_PIPOUS_AUTH=session
@@ -17,6 +19,8 @@ DORADO_REGION_PIPOUS_ALIASES=us_pipo,pipo-us,pipo_us,uspipo
 If the target IDC/region is not covered by the built-in list, prefer adding a custom region in `.dorado.env` instead of modifying code. When `DORADO_REGION_<NAME>_SITE` is omitted, Dorado auth follows the global `--site` / `BYTEDCLI_CLOUD_SITE`.
 
 `DORADO_REGION_<NAME>_AUTH` supports `jwt|auto|session`. Built-in regions default to `jwt`, except `mycis` and `gp-us`, which are built in as `session`; custom regions default to `auto`. Use `session` for known special Dataleap environments that require browser-session cookies in addition to JWT. Without `AUTH=session`, keep the normal JWT flow first and only switch to `bytedcli auth login --session` when the target region shows explicit web-auth signals, such as JSON output already including `error.hint` / `error.auth_command`, login redirects, or web-side auth failures.
+
+Custom group-based Dataleap regions can also set `DORADO_REGION_<NAME>_GROUP_NAME` and `DORADO_REGION_<NAME>_PROJECT_PREFIX`; Dorado task-list referers then use `groupName=<group>` and `project=<projectPrefix>_<projectId>` to match web console routing.
 
 When a user already provides an unknown custom region name, do not probe built-in regions as a fallback. Prefer configuring `.dorado.env` first and let the CLI return a direct configuration hint if the region is still unknown.
 
@@ -53,7 +57,7 @@ bytedcli dorado baseline get --task-id <taskId> --region-value <regionValue> --r
 
 Use `--region-value` for i18n baseline lookups when an explicit backend region enum is needed. For `--baseline-id <baselineId> --project-id <projectId>`, still pass `--region mycis` for mycis because the CLI switches baseline detail to the Oceanus baseline host internally while preserving the `mycis` page context and `x-dataleap-jwt-token` request shape.
 
-For `mycis`, these baseline-global BFFs all share the same host-split rule: `baseline/task/{taskId}/v2`, `baseline/detail/{baselineId}`, `baseline/list`, `baseline/instance/list`, `baseline/{baselineId}/commitTasks/v2`, `baseline/alarm/instance/record`, and `baseline/alarm/ack/record` are sent to the Oceanus host physically, while `Origin/Referer`, `x-bcgw-vregion`, and `x-dataleap-jwt-token` still follow the `mycis` page context. `mycis` baseline_global uses `region_value=107`; pass `--region mycis` and the CLI fills it automatically, or pass `--region-value 107` explicitly. Reuse this route when adding similar baseline BFFs and cover the `mycis` host/header branch with offline tests.
+For `mycis`, these baseline-global BFFs all share the same host-split rule: `baseline/task/{taskId}/v2`, `baseline/detail/{baselineId}`, `baseline/list`, `baseline/instance/list`, `baseline/{baselineId}/commitTasks/v2`, `baseline/alarm/instance/record`, `baseline/alarm/ack/record`, and `PUT baseline/{baselineId}` (baseline update) are sent to the Oceanus host physically, while `Origin/Referer`, `x-bcgw-vregion`, and `x-dataleap-jwt-token` still follow the `mycis` page context. `mycis` baseline_global uses `region_value=107`; pass `--region mycis` and the CLI fills it automatically, or pass `--region-value 107` explicitly. Reuse this route when adding similar baseline BFFs and cover the `mycis` host/header branch with offline tests.
 
 When the user instead wants the project-scoped baseline list page (for example `/dorado_api/baseline_global/baseline/list?...&projectId=<projectId>&baseline=<keyword>`), prefer:
 
@@ -78,6 +82,24 @@ bytedcli dorado baseline commit-tasks --baseline-id <baselineId> --baseline-inst
 ```
 
 For `mycis`, keep `--region mycis`; the CLI routes this baseline instance detail lookup to the Oceanus host while preserving the `mycis` page context and `x-dataleap-jwt-token` header shape.
+
+When the user wants to update a baseline definition (the web edit page's `PUT /dorado_api/baseline_global/baseline/<baselineId>?projectId=<projectId>&region_value=<regionValue>` call), prefer:
+
+```bash
+bytedcli dorado baseline update --baseline-id <baselineId> --project-id <projectId> --region <region> --region-value <regionValue> --body-file <path>
+```
+
+The baseline edit payload is large and evolving (`name`, `slaPriority`, `type`, `taskIds`, `hourlyCommitTimes`, `alarmConfs`, `baselineAlarmItems`, …), so pass the full JSON body through `--body-file <path>` (or inline `--body '<json>'`); the CLI forwards it unchanged. Provide exactly one of `--body`/`--body-file`. For `mycis`, keep `--region mycis`; the CLI routes the update PUT to the Oceanus host while preserving the `mycis` page context and `x-dataleap-jwt-token` header shape.
+
+When the user only wants to add or remove task bindings on a baseline (the common "把某个 task 加入/移出基线" ask), prefer the incremental command instead of hand-building the full PUT body:
+
+```bash
+bytedcli dorado baseline update-tasks --baseline-id <baselineId> --project-id <projectId> --region <region> --add-task-ids <id1,id2> --remove-task-ids <id3>
+```
+
+The CLI fetches the baseline detail, projects it back into the edit-page PUT body, merges the task list (removals first, then additions, de-duplicated while preserving the existing order), and PUTs it — no manual body needed. Provide at least one of `--add-task-ids`/`--remove-task-ids` (comma-separated positive task IDs). When the merged task list equals the current one (e.g. adding a task that is already bound), the command short-circuits and reports `no change` without issuing a PUT. For `mycis`, keep `--region mycis`; routing follows the same Oceanus host-split rule as `baseline update`.
+
+Note that `update-tasks` is equivalent to opening the web edit page, changing only the task list, and saving — it rebuilds the whole baseline via the edit-page projection. Fields the edit page does not write back (e.g. `alarmConf`, `baselineAlarmItems[*].params`, `alarmConfs[*].{alarmItems,larkGroups,openAlarmUpgrade}`) are reset to their edit-page projection (emptied or dropped), not the values currently stored on the baseline. If you must preserve those alarm fields, use `baseline update --body-file` with the full payload instead.
 
 For page-shaped submit flows such as `dorado task commit`, `dorado task commit-approval`, and `dorado node submit-approval`, if the web payload includes monitoring fields like `openDefaultSystemAlarm`, `customAlarmRuleIds`, and `baselineIds`, only expose the fields users can reason about directly. Keep fixed/default payload structures such as `noticeConf` in the implementation layer instead of asking users to pass empty objects.
 
@@ -1529,7 +1551,7 @@ Execute an ad-hoc SQL query via the Dorado ad-hoc query API. For Hive SQL, use a
 
 **Safety check:** Before executing, the command verifies that the carrier task is **not** an online production task. If the task is online, execution is blocked to prevent unintended modifications to production task state. Use `--force` to bypass this check (not recommended).
 
-With `--wait`, polls until completion and fetches the result (first 10 rows previewed in text mode; full data in JSON mode). With `-o`, downloads the full result as CSV.
+With `--wait`, polls until completion and fetches the result (first 10 rows previewed in text mode; full data in JSON mode). Failed runs also include a `note` field / `Note:` line when Dorado run logs expose detailed engine or SQL errors. With `-o`, downloads the full result as CSV.
 
 ```bash
 bytedcli dorado adhoc exec [sql] [options]
@@ -1582,11 +1604,19 @@ bytedcli dorado adhoc exec "SELECT 1" --region boei18n
 bytedcli dorado adhoc exec "SELECT * FROM db.table" --task-id 100274211 --json
 ```
 
+When a waited execution fails, text mode prints:
+
+```text
+Note: <detailed error extracted from run log>
+```
+
+JSON mode returns the same detail in `errorMessage`.
+
 ---
 
 ### adhoc status
 
-Get ad-hoc execution status by debug ID. Use to check whether an async `adhoc exec` has completed.
+Get ad-hoc execution status by debug ID. Use to check whether an async `adhoc exec` has completed. Failed runs also include a `note` field / `Note:` line when Dorado run logs expose detailed engine or SQL errors.
 
 ```bash
 bytedcli dorado adhoc status [options]
@@ -1605,6 +1635,17 @@ bytedcli dorado adhoc status [options]
 
 ```bash
 bytedcli dorado adhoc status --debug-id 12977673 --task-id 119886373
+```
+
+When status is `failed`, JSON output includes:
+
+```json
+{
+  "debugId": 12977673,
+  "status": "failed",
+  "statusCode": 5,
+  "note": "2026-06-05T14:18:35.904 ERROR ..."
+}
 ```
 
 ---

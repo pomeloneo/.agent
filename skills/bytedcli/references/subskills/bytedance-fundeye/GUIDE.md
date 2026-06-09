@@ -39,6 +39,7 @@ bytedcli <command> [options]
 
 - 规则详情：`fundeye rule get`
 - 规则列表：`fundeye rule list`
+- 标签查询：`fundeye tag search`
 - 规则创建：`fundeye rule create`
 - 规则发布：`fundeye rule deploy`
 - 业务归属查询：`fundeye biz get`
@@ -65,7 +66,7 @@ bytedcli <command> [options]
 1. 需要机器可读输出时默认加 `--json`，并把它放在 `fundeye` 前面。
 2. 规则详情优先用 `fundeye rule get --rule-id <id>`。
 3. 业务归属筛选优先走两步：先用 `fundeye biz get --path '<层级1-层级2>'` 拿到 `value`，再把该值传给 `fundeye rule list --business-ownership <value>`。
-4. 规则列表优先用 `fundeye rule list --product-type fullink|tcheck`；默认查询 `fullink`，需要时再补 `--name`、`--owner`、`--status`、`--business-ownership`，`tcheck` 还支持 `--period`。
+4. 规则列表优先用 `fundeye rule list --product-type fullink|tcheck`；默认查询 `fullink`，需要时再补 `--name`、`--owner`、`--status`、`--business-ownership`，`tcheck` 还支持 `--period`、`--tag-id`。
 5. 新建规则优先用 `fundeye rule create --product-type fullink|tcheck --rule-owner <owner> --params '<json>'`；该能力目前仅支持 `cn` 机房，`--params` 只传业务参数对象，CLI 会自动包装成 `source + agent_task_list` 请求体；需要等最终落规则时再加 `--poll`。
 6. 需要发布 `tcheck` 规则时，用 `fundeye rule deploy --product-type tcheck --rule-id <id>`；火山云暂不支持。
 7. diff 明细优先用 `fundeye diff get --diff-id <id> --rule-id <id>`。
@@ -87,6 +88,9 @@ bytedcli --json fundeye rule list \
   --owner demo-owner \
   --page 1 \
   --page-size 10
+
+# 标签查询
+bytedcli --json fundeye tag search --name 风险 --product tcheck --page 1 --page-size 10
 
 # 先用业务归属路径换取 business_ownership ID
 bytedcli --json fundeye biz get --path '财经-数据平台'
@@ -162,7 +166,7 @@ bytedcli --json fundeye alarm list --page 1 --page-size 20
 - 使用 `fundeye rule list --product-type fullink|tcheck`
 - 默认查询 `fullink`
 - `fullink` 支持 `--name`、`--owner`、重复 `--status`、`--business-ownership`
-- `tcheck` 额外支持 `--period`
+- `tcheck` 额外支持 `--period`、重复 `--tag-id`
 
 ### 3. 创建规则
 
@@ -216,6 +220,7 @@ bytedcli --json fundeye alarm list --page 1 --page-size 20
 - 再执行 `fundeye diff list --rule-id ... --alarm-order-id ... --start ... --end ...`
 
 ## Notes
+
 - `--json` 是全局参数，必须放在 `fundeye` 前面，例如 `bytedcli --json fundeye rule get --rule-id ...`
 - `fundeye rule create` 发送给服务端的请求体会自动包装成 `{"source":"platform_api","agent_task_list":[...]}`；CLI 侧 `--params` 只需要传单条任务里的业务参数对象
 - `fundeye diff` 现在是分组命令；详情请用 `fundeye diff get`，列表请用 `fundeye diff list`

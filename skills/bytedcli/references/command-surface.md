@@ -54,6 +54,7 @@ bytedcli <domain> --help
 - `bytedance-tae`: TAE / AI PaaS 内部 API 工作流；重点覆盖 Agent/Sandbox list/get、`/tae/mcp_server/...` 页面下 MCP Server 新建/list/detail/update、tools 的 create/update/delete、从 Thrift IDL 生成 `tool_input_schema`、release 发布与验证；也记录 Memory、Skill、A2A Registry、Security、Keys 等已发现页面/操作名。CLI 未覆盖能力时使用该 skill 指南。
 - `volcano`: Volcano Engine；支持两种鉴权：SSO session（`volcano auth login`）和 AK/SK（`volcano auth config`）。覆盖 veFaaS 函数、实例、release、沙箱函数、sandbox、sandbox image，CR 镜像仓库资源，TLS topic/log，VKE 集群/节点池，以及 VPC、NAT 网关、子网、安全组等资源查询。`volcano auth accounts` 可列出当前用户有权限的火山账号。
 - `bytecloud` / `cloud`: 站点、vregion、VDC 等字节云基础信息。
+- `janus`: Janus 泳道、group、配置、IDL 版本、endpoint、backend 与发布 workflow 管理；backend create/update 支持 thrift/http 协议。
 - `moss`: MOSS 测试物料管理平台，支持测试账号测试标查询、名下测试账号列表，以及虚拟证件列表。鉴权使用 ByteCloud SSO JWT。
 - `bytetree`: 服务树节点搜索、详情查询、子节点遍历、父链查询。
 - `netlink`: 域名、路径、topology、servername、域名配置。

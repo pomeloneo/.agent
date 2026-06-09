@@ -9,6 +9,7 @@ bytedcli cache get-cluster --psm "cache.demo"
 bytedcli cache get-idc-topology --psm "cache.demo"
 
 # Redis 命令
+bytedcli cache list-commands
 bytedcli cache execute-command --psm "cache.demo" --command "GET" --args "key"
 
 # 慢查询 / 大 Key / 热 Key

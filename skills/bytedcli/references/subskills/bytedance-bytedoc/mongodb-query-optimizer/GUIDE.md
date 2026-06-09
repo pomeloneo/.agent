@@ -1,47 +1,84 @@
-# MongoDB Query Optimizer Guidance for ByteDoc
+# ByteDoc MongoDB 查询优化指南
 
-Use this guide when the user says a ByteDoc / Mongo query is slow, times out, scans too much data, sorts slowly, or asks for index/query optimization.
+当用户表示 ByteDoc / Mongo 查询慢、超时、扫描数据过多、排序慢，或请求 index/query 优化时，使用本指南。
 
-This guide adapts MongoDB official `mongodb-query-optimizer` agent-skill guidance for ByteDoc. See `../references/mongodb-upstream-adaptation.md` for upstream mapping and exclusions.
+本指南将 MongoDB 官方 `mongodb-query-optimizer` agent-skill 规则适配到 ByteDoc 场景。upstream 映射和排除项见 `../references/mongodb-upstream-adaptation.md`。
 
-## Evidence To Collect
+## 需要收集的证据
 
-- ByteDoc database identity: service PSM, backend, deploy mode, site, vRegion, and collection.
-- Query shape: filter, sort, projection, limit, and operation type.
-- Slow-query evidence: `bytedcli --json bytedoc slow-query overview ...` and detail/fingerprint data when available.
-- Collection evidence: schema/sample fields, existing indexes, data volume if available, and recent error messages.
-- Runtime evidence: whether the caller is local/devbox/TCE/FaaS and whether latency is connection setup or query execution.
+- ByteDoc 数据库身份：service PSM、site、backend 和 vregion。缺少 site 时按 `../references/selection-guards.md` 澄清；backend/vregion 只能由用户提供或搜索/resolver 证明唯一。
+- Query shape：filter、sort、projection、limit 和操作类型。
+- 慢查询证据：`bytedcli --json --site <site> --vregion <confirmed-vregion> bytedoc slow-query overview --service <psm> --backend <confirmed-backend> ...`，以及可用的 detail / fingerprint 数据。
+- 慢查询命令细节优先加载 `slow-query/GUIDE.md`；本指南只负责 query shape、index 和 schema 诊断。
+- Collection 证据：schema / sample 字段、现有 index、可用的数据量信息，以及近期错误信息。
+- 运行时证据：调用方是 local/devbox/TCE/FaaS，以及延迟主要来自连接建立还是查询执行。
 
-## Analysis Flow
+## 分析流程
 
-1. Confirm the access path with `bytedoc sdk plan`; connection-path issues are not query optimizer issues.
-2. Normalize the query shape and remove user-specific literal values when describing it.
-3. Check whether predicates and sort keys can use an existing index.
-4. Look for unbounded scans, missing tenant/account/time filters, regex without anchors, large `$in`, and in-memory sort symptoms.
-5. Prefer query-shape changes before index requests when the query is overly broad.
-6. If recommending an index, explain the exact query shape it supports and the write/storage trade-off.
+1. 先确认 site、backend/vregion 和 collection；缺少 site 时询问用户，backend/vregion 多值时展示候选让用户选择。
+2. 使用 `bytedoc sdk plan` 确认访问路径；连接路径问题不是 query optimizer 问题。
+3. 归一化 query shape，描述时移除用户专属字面值。
+4. 检查谓词和 sort key 是否能使用现有 index。
+5. 查找无边界扫描、缺少 tenant/account/time filter、无锚点 regex、大 `$in`、内存排序等症状。
+6. 查询过宽时，优先建议 query shape 调整，再考虑新增 index。
+7. 如果建议 index，说明它精确支持的 query shape，以及写入/存储 trade-off。
 
-## ByteDoc Commands
+## ByteDoc 命令
 
 ```bash
-bytedcli --json bytedoc slow-query overview --service "example.bytedoc.demo_orders" --deploy-mode classic --millis 100
-bytedcli --json bytedoc slow-query detail --service "example.bytedoc.demo_orders" --fingerprint-id "<fingerprint>"
-bytedcli --json bytedoc collections --service "example.bytedoc.demo_orders"
-bytedcli --json bytedoc shell --service "example.bytedoc.demo_orders" --collection "demo_items" --query 'find({"tenant":"demo"}).limit(10)'
+# 慢查询概览（使用已确认 backend/vregion）
+bytedcli --json --site cn --vregion China-North bytedoc slow-query overview --service "example.bytedoc.demo_orders" --backend classic --millis 100
+
+# 慢查询详情
+bytedcli --json --site cn --vregion China-North bytedoc slow-query detail --service "example.bytedoc.demo_orders" --backend classic --ids "<fingerprint>"
+
+# 列出集合（使用已确认 backend/vregion）
+bytedcli --json --site cn --vregion China-North bytedoc collections --service "example.bytedoc.demo_orders" --backend classic
+
+# shell 查询（使用已确认 backend/vregion）
+bytedcli --json --site cn --vregion China-North bytedoc shell --service "example.bytedoc.demo_orders" --backend classic --collection "demo_items" --query 'find({"tenant":"demo"}).limit(10)'
 ```
 
-## Optimization Rules
+## 查询优化示例
 
-- Apply ESR thinking where appropriate: equality predicates, sort fields, then range predicates.
-- Do not recommend blind indexes for every field; each index must map to a repeated query shape.
-- Do not tune pool size or timeout values until query execution evidence rules out query shape and index issues.
-- Do not rely on Atlas Performance Advisor; use ByteDoc slow-query and metadata surfaces instead.
-- If explain is unavailable or unsafe, state that the recommendation is based on slow-query/schema/index evidence rather than an execution plan.
+```bash
+# 场景：用户说"demo_orders 的查询特别慢"
 
-## Output Format
+# Step 1: 确认 site 后解析目标数据库
+bytedcli --json --site cn bytedoc search --keyword "example.bytedoc.demo_orders"
+# → 确认唯一候选：backend=classic, vregion=China-North
 
-- Summarize the current query shape.
-- List evidence gathered and gaps.
-- Give safe query rewrites first.
-- Give index recommendations only with trade-offs.
-- Provide verification commands the user or agent can run after changes.
+# Step 2: 查看慢查询
+bytedcli --json --site cn --vregion China-North bytedoc slow-query overview --service "example.bytedoc.demo_orders" --backend classic --millis 100
+
+# Step 3: 查看集合 schema 和索引
+bytedcli --json --site cn --vregion China-North bytedoc collections --service "example.bytedoc.demo_orders" --backend classic
+
+# Step 4: 基于证据给出优化建议
+```
+
+## 优化规则
+
+- 适用时使用 ESR 思路：equality predicate、sort field、range predicate。
+- 不要为每个字段盲目建议 index；每个 index 都必须映射到重复出现的 query shape。
+- 在 query shape 和 index 问题被证据排除前，不要优先调连接池大小或 timeout。
+- 不要依赖 Atlas Performance Advisor；使用 ByteDoc slow-query 和元数据面。
+- 如果 explain 不可用或不安全，说明建议基于 slow-query / schema / index 证据，而不是执行计划。
+
+## 输出格式
+
+- 总结当前 query shape。
+- 列出已收集证据和缺口。
+- 优先给安全 query rewrite。
+- 只有在说明 trade-off 时才给 index 建议。
+- 提供变更后可由用户或 Agent 执行的验证命令。
+
+## DO / DON'T
+
+| 场景 | ✅ DO | ❌ DON'T |
+| --- | --- | --- |
+| 用户问"查询慢怎么办" | 先收集 slow-query 证据 | 不要直接说"加索引" |
+| 建议索引 | 说明它精确支持的 query shape 和 trade-off | 不要为每个字段盲目建 index |
+| explain 不可用 | 基于 slow-query / schema 证据分析 | 不要说"无法分析" |
+| 用户想调连接池 | 先排除 query shape 和 index 问题 | 不要把连接池作为首选优化 |
+| ESR 原则 | equality → sort → range 顺序建议 | 不要把 range 放在 sort 前面 |

@@ -62,7 +62,7 @@ bytedcli --json coral permission withdraw --region sg --id <application_id> --de
 
 ## Notes
 
-- Supported Coral regions shown by current help: `cn`, `sg`, `gcp`, `va`, `mycis`, `us-eastred`, `us`. The default follows `--site` / `BYTEDCLI_CLOUD_SITE`: `eu-ttp` uses `us-eastred`, US-TTP sites use `us`, `i18n` uses `va`, `i18n-bd` uses `mycis`, and unspecified or `i18n-tt` uses `sg`.
+- Supported Coral regions shown by current help: `cn`, `sg`, `gcp`, `va`, `mycis`, `sglark`, `jplark`, `uspipo`, `us-eastred`, `us`. The default follows `--site` / `BYTEDCLI_CLOUD_SITE`: `eu-ttp` uses `us-eastred`, US-TTP sites use `us`, `i18n` uses `va`, `i18n-bd` uses `mycis`, and unspecified or `i18n-tt` uses `sg`.
 - For Hive table search, `HiveTable` works as the entity type.
 - `permission apply` returns either a submitted/existing/unknown result or `status: draft`; see `permission-workflow.md` for draft handling.
 - `permission apply --cluster <cluster>` is an advanced Coral group override. CN permission apply defaults to Coral group `default`; omit it for normal flows.

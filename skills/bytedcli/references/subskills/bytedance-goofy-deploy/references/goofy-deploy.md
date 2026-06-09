@@ -104,6 +104,13 @@ bytedcli goofy deploy get-channel --channel-id <channel_id>
 # List deployment history for a project
 bytedcli goofy deploy list-deployments --app-id <app_id> --page 1 --page-size 20
 
+# List deployment history for a specific channel (app-id is not required)
+bytedcli goofy deploy list-deployments --channel-id <channel_id>
+
+# Provide both flags; --channel-id takes precedence and --app-id is ignored
+# (a note is emitted in text mode; JSON output includes ignored_app_id: true)
+bytedcli goofy deploy list-deployments --app-id <app_id> --channel-id <channel_id>
+
 # Get deployment details (by ID or URL)
 bytedcli goofy deploy get-deployment <deploy_url_or_id>
 bytedcli goofy deploy get-deployment --deploy-id <deploy_id>

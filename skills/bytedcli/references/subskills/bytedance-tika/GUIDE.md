@@ -97,7 +97,8 @@ bytedcli tika conversations --page-size 5
 
 - `tika chat` 文本模式默认流式输出；`--json` 模式返回完整回答
 - 认证复用 ByteCloud SSO，JWT 通过 `cloud-i18n.byteintl.net`（region: i18n）获取
-- 默认知识空间 ID 为 `6732288003`（Tika 公共知识库）
+- 默认知识空间 ID 为 `6732288003`（Tika 公共知识库），可通过 `BYTEDCLI_TIKA_DEFAULT_SPACE_ID` 环境变量覆盖
+- 默认模型为 `gemini_2.5_pro`，可通过 `BYTEDCLI_TIKA_DEFAULT_MODEL` 环境变量覆盖
 - 对话历史通过 `tika conversations` 查看，包含问答内容摘要
 
 ## References

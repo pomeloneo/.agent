@@ -14,8 +14,8 @@ bytedcli tika chat --message <message> [options]
 |------|------|
 | `--message <message>` | **必填** 问题文本 |
 | `--conversation-id <id>` | 续用已有会话 |
-| `--space-id <space_id>` | 知识空间 ID（默认: Tika 公共知识库） |
-| `--model <model>` | AI 模型名（如 `gemini_2.5_pro`、`gpt_4.1_mini`、`tika-deepseek-v3.2`） |
+| `--space-id <space_id>` | 知识空间 ID（默认: Tika 公共知识库，可通过 `BYTEDCLI_TIKA_DEFAULT_SPACE_ID` 覆盖） |
+| `--model <model>` | AI 模型名（如 `gemini_2.5_pro`、`gpt_4.1_mini`、`tika-deepseek-v3.2`，默认: `gemini_2.5_pro`，可通过 `BYTEDCLI_TIKA_DEFAULT_MODEL` 覆盖） |
 | `--no-stream` | 等待完整回答后再输出 |
 | `--search-mode <mode>` | 搜索模式（默认: `fast_agent`） |
 | `--timeout-sec <seconds>` | 请求超时（秒） |

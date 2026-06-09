@@ -2,7 +2,7 @@
 
 Manta is part of the DataLeap platform for data profiling and quality management. This CLI provides commands to query namespaces, list/run/create table monitor rules, query alarm records, create profiling rules, list profiling jobs, get profiling results, query comparison job summaries, and authenticate with DataLeap Manta.
 
-Supported regions: `cn`, `sg`, `va`, `eu`, `mycis`.
+Supported regions: `cn`, `sg`, `va`, `eu`, `mycis`, `sglark`, `jplark`, `uspipo`.
 
 ## Commands
 

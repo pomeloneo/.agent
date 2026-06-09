@@ -15,7 +15,7 @@ bytedcli hive search [options]
 **Options:**
 - `--query <query>` - Search query (required)
 - `-t, --type <type>` - Asset type: HiveDB, HiveTable, ClickhouseDB, ClickhouseTable, DorisTable, DataTopics (default: "HiveDB")
-- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
+- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, sglark, jplark, uspipo, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
 - `-p, --page <page>` - Page number (default: 1)
 - `--size <size>` - Page size (default: 20)
 
@@ -50,7 +50,7 @@ bytedcli hive detail [database] [table] [options]
 - `table` - Table name (optional, omit for database details)
 
 **Options:**
-- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
+- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, sglark, jplark, uspipo, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
 - `-t, --type <type>` - Asset type (HiveDB, HiveTable, ClickhouseDB, etc.)
 
 **Examples:**
@@ -87,7 +87,7 @@ bytedcli hive get [guid] [options]
 - `guid` - Entity GUID from search results (required)
 
 **Options:**
-- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
+- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, sglark, jplark, uspipo, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
 
 **Examples:**
 ```bash
@@ -118,7 +118,7 @@ bytedcli hive rows [database] [table] [options]
 - `table` - Table name (required)
 
 **Options:**
-- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
+- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, sglark, jplark, uspipo, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
 
 **Examples:**
 ```bash
@@ -149,7 +149,7 @@ bytedcli hive lineage [guid] [options]
 - `guid` - Entity GUID (required)
 
 **Options:**
-- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
+- `-r, --region <region>` - Region (built-in: cn, sg, gcp, va, mycis, sglark, jplark, uspipo, mybd, us-ttp, eu-ttp2, eu-compliance2, eu-ttp) (default: "cn")
 - `-d, --depth <depth>` - Lineage depth (default: 3)
 
 **Examples:**

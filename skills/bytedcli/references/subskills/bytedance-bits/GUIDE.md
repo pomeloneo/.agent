@@ -247,11 +247,23 @@ bytedcli bits job-run force-skip \
 
 `bits job-run continue-release` 用于通过 / 拒绝 BITS Pipeline 的 `user_confirm`（人工确认 / 继续发布）节点，适合发布流水线在 Canary / 单机房完成后点“继续发布”，或最后“收尾关单”的场景。确认方法名**按节点自动解析**：命令会先读取该节点运行时的确认按钮（`extra_action`），回放对应的 `method_name` 与 `is_pass`，不再写死——因为不同节点方法名不同（例如观察放行节点用 `user_define_method`、收尾关单节点用 `user_define_method_for_bits`），写死会导致方法名不匹配、确认节点被后端打成 failed。默认动作是“通过”，`--reject` 为“不通过”；个别老节点解析不到时再用 `--method-name` 手动指定。先用 `--dry-run` 核 payload，再真实执行。
 
+命令会自动把当前登录用户名注入到 `inputs.username`。这是**必需**的：星盾发布质检门（atom `starshield_process_guard`，`method_name=user_define_method`）的服务端直接读 `inputs.username`，缺它会 500 `KeyError:'username'`、把节点打成 failed 并卡住主流水线；变更观测 `ContinueRelease` 等门从鉴权侧取用户名、带上无害。可选 `--check-permission`（需配合 `--space-id`）会先做一次 RBAC 预检，无权时直接报缺 `bits.servicePipeline.customJobrun`，不会盲发写请求。
+
 ```bash
 bytedcli bits job-run continue-release \
   --job-run-id 2787514722 \
   --pipeline-run-id 1158906980866 \
   --dry-run
+```
+
+### 列出 Pipeline jobRun 可用操作
+
+`bits job-run list-operations` 只读，列出某 pipeline run 下每个 jobRun 当前支持的操作枚举（`5`=force-skip，`8`=user_define / continue-release）。推进门禁前先用它确认目标节点是不是可操作的 `user_confirm` / 可跳过类型，避免盲调。
+
+```bash
+bytedcli bits job-run list-operations \
+  --pipeline-run-id 1158906980866 \
+  --space-id 4046305282
 ```
 
 ### 导入 TCC 配置到研发任务
@@ -831,6 +843,16 @@ bytedcli bits develop publish --dev-id 2402911 --dry-run
 bytedcli bits develop publish --dev-id 2402911
 ```
 
+#### Agent Guidance：发布要先认领状态机（DevTask vs 发布单）
+
+DevTask 工作流和发布单工作流是两条独立状态机。研发任务页面上的“发布”按钮属于 **DevTask** 状态机，对应命令是 `bits develop publish`（底层推进 `DevReleaseStage`），不是 `bits release` 下的命令。
+
+- 关键陷阱：发布单**已经存在**并不代表它已接管整条链路。只要 DevTask 的发布交接还没完成，写操作依旧归 `bits develop`。看到发布单已存在就切到 `bits release status-operation` / `bits release pipeline run` 是错误路径。
+- 当某次发布源自 BITS 研发任务时，优先先查 DevTask：`bytedcli --json bits develop get --dev-id <dev-id>`；推进前用 dry-run 探一次 `bytedcli --json bits develop publish --dev-id <dev-id> --release-ticket-id <release-ticket-id> --dry-run`，能解析出 `releaseTicketId` 就说明这才是“发布”按钮的正确入口。
+- 只有 DevTask 发布交接完成、发布单 integration 也完成后，才切到发布单侧只读轮询（`bits release get` / `bits release stages` / `bits release stage pipeline` / `bits release stage deploy-overview`）。
+
+为防止误操作，`bits release pipeline run` 现在会先做 can-run 预检：当后端 `canRun=false` 时命令直接 fail fast（`BITS_RELEASE_PIPELINE_NOT_RUNNABLE`），在 `hint` 里给出“先查 DevTask / 改用 `bits develop publish`”的修复建议，并在 `details.pipeline_not_runnable_reason` 暴露原因码，而不再返回一个看似成功、实则空跑的结果。确认发布单确实已接管该状态转移时，可加 `--force` 跳过预检强制运行。
+
 ### 处理 gatekeeper 检查项（skip / approve / reject）
 
 `bits develop gatekeeper` 用于查看并处理研发任务某个阶段的 gatekeeper 检查项；它是推进 `pass-stage` 的前置入口。先用 `list` 拿到 `checkID`，再按检查项性质 skip / approve / reject：
@@ -980,6 +1002,7 @@ bytedcli bits release integration lock \
   --project-name <project-name>
 
 # 查询并运行发布 pipeline。Web/前端发布常需要 --use-change-items，TCE 发布若依赖策略则加 --attach-deploy-strategy。
+# pipeline run 会先做 can-run 预检：canRun=false 时直接报错并提示改用 bits develop publish；确认发布单已接管时可加 --force 跳过。
 bytedcli bits release pipeline change-items \
   --ticket-id <release-ticket-id> \
   --stage-id <stage-id> \

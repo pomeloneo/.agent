@@ -5,6 +5,8 @@
 ## 环境与站点
 
 - `--site cn|boe|i18n|i18n-tt|eu-ttp`：切换 ByteCloud 站点（影响请求 host + `x-bcgw-vregion`）
+- `--vregion`：同样影响 `x-bcgw-vregion`。访问 ChinaSinf-North（cnsinf）隔离基建 bucket 时必须传 `--vregion ChinaSinf-North`，命令会把 `x-bcgw-vregion` 设为 `cnsinf`；其他 vregion 维持各 site 的默认路由（如 cn 为 `default`）。否则路由仍是 default、访问该区域 bucket 会报 `bucket: not found`。
+- 全局 flag（`--site`/`--vregion`）放在 `tos` 子命令之前。
 - `tos list-sites`：从平台 meta API 拉取站点/VRegion 列表（best-effort，缓存 1 天）
 
 ## 命令
@@ -59,6 +61,9 @@ bytedcli tos list-objects --bucket-id 123 --prefix datasets --limit 100
 
 # 继续翻页
 bytedcli tos list-objects --bucket-id 123 --prefix datasets --last-key datasets/sample.txt
+
+# 访问 ChinaSinf-North（cnsinf）隔离基建 bucket（全局 flag 在 tos 子命令之前）
+bytedcli --site cn --vregion ChinaSinf-North tos list-objects --bucket-id 123 --limit 100
 ```
 
 ### 6) tos get-object-url
@@ -78,6 +83,9 @@ bytedcli tos get-object-url --bucket-id 123 --key datasets/sample.txt --type off
 
 # 同时获取两种地址
 bytedcli tos get-object-url --bucket-id 123 --key datasets/sample.txt --type both
+
+# 访问 ChinaSinf-North（cnsinf）隔离基建 bucket（全局 flag 在 tos 子命令之前）
+bytedcli --site cn --vregion ChinaSinf-North tos get-object-url --bucket-id 123 --key datasets/sample.txt
 ```
 
 ### 7) tos delete-object

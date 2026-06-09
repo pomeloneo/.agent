@@ -6,6 +6,7 @@
 - `fundeye rule list`
 - `fundeye rule create --product-type fullink|tcheck --rule-owner <owner> --params '<json>'`
 - `fundeye rule deploy --product-type tcheck --rule-id <rule-id>`
+- `fundeye tag search --name <keyword> [--product tcheck]`
 - `fundeye biz get --path '<层级1-层级2>'`
 - `fundeye diff get --diff-id <diff-id> --rule-id <rule-id>`
 - `fundeye diff list --rule-id <rule-id>`
@@ -57,7 +58,7 @@ bytedcli --json fundeye rule list \
 - 默认产品类型是 `fullink`
 - CLI 使用重复 `--status`；`fullink` 映射成 `status`，`tcheck` 映射成 `status[]`
 - `fullink` 支持：`--name`、`--owner`、`--status`、`--business-ownership`
-- `tcheck` 额外支持：`--period`
+- `tcheck` 额外支持：`--period`、重复 `--tag-id`
 
 ### 创建规则
 
@@ -107,6 +108,17 @@ bytedcli --json fundeye rule deploy \
 - 走平台鉴权 headers（`x-jwt-token` + `UserName`）
 - 支持通过 `--sitename sg` 切到新加坡机房；默认仍为 `cn`
 - 火山云（`--sitename volc/火山云`）暂不支持
+
+### 标签查询
+
+```bash
+bytedcli --json fundeye tag search --name '风险' --product tcheck --page 1 --page-size 10
+bytedcli --json fundeye tag search --exact-name '会员' --product tcheck
+```
+
+- 用于按标签名模糊/精确查询标签 ID
+- 支持 `--product`、`--tag-type`、`--page`、`--page-size`
+- JSON 输出包含 `tags`、`current_page`、`page_size`、`total`
 
 ### 业务归属查询
 
@@ -217,6 +229,7 @@ bytedcli --json fundeye alarm list --page 1 --page-size 20
 - 当用户只有业务归属名称路径时，推荐流程是：
   - `fundeye biz get --path '<层级1-层级2>'`
   - `fundeye rule list --business-ownership <value>`
+- 需要按标签名查标签 ID 时，单独使用 `fundeye tag search --name <keyword> [--product tcheck]`
 - 先看告警，再查 diff 时，推荐流程是：
   - `fundeye alarm list`
   - `fundeye diff list`

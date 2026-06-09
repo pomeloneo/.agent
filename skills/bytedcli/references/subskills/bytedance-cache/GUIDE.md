@@ -1,6 +1,6 @@
 ---
 name: bytedance-cache
-description: "Operate Cache platform via bytedcli: list/search cache services, get service details, get cluster details, get IDC topology, execute Redis commands, query slow logs, list big keys, list hot keys, and manage Cache platform support tickets. Use when tasks mention cache services, cache clusters, Redis queries, slow logs, big keys, hot keys, IDC topology, region/idc roles, tickets, or troubleshooting cache latency, Redis performance, memory usage, abnormal keys, or service health. Do not use for general Redis programming questions, non-Bytedance Cache resources, or concept-only explanations that do not require bytedcli."
+description: "Operate Cache platform via bytedcli: list/search cache services, get service details, get cluster details, get IDC topology, list supported Redis commands, execute Redis commands, query slow logs, list big keys, list hot keys, and manage Cache platform support tickets. Use when tasks mention cache services, cache clusters, Redis queries, supported Redis commands, slow logs, big keys, hot keys, IDC topology, region/idc roles, tickets, or troubleshooting cache latency, Redis performance, memory usage, abnormal keys, or service health. Do not use for general Redis programming questions, non-Bytedance Cache resources, or concept-only explanations that do not require bytedcli."
 ---
 
 # bytedcli Cache
@@ -25,7 +25,7 @@ bytedcli <command> [options]
 
 - 缓存服务搜索 / 收藏 / 详情
 - 缓存集群详情 / 实例列表
-- Redis 命令执行
+- Redis 支持命令列表 / 命令执行
 - 慢查询、大 Key、热 Key 查询
 - 工单管理
 - 支持国内站（prod）和海外站；使用全局 `--site` 选择站点：`i18n-tt`（SG）、`ttp-us-limited`（US TTP）、`ttp-eu`（EU TTP）
@@ -54,6 +54,7 @@ bytedcli cache get-cluster --psm "cache.demo"
 bytedcli cache get-idc-topology --psm "cache.demo"
 
 # Redis 命令
+bytedcli cache list-commands
 bytedcli cache execute-command --psm "cache.demo" --command "GET" --args "key"
 
 # 慢查询
