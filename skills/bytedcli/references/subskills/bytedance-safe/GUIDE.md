@@ -1,6 +1,6 @@
 ---
 name: bytedance-safe
-description: Content moderation platform operations via bytedcli. Router skill for safe domain sub-skills, including puzzle workflows, Safe disposal feature/action queries and copy tickets, Safe sample library queries, SafeMind graph lifecycle/testing/trace operations, OCTP content-safety entity traces, and Digital Employee workflows. Use for 中文意图：内容安全、实体ID链路、送审、机审、处置、沟通、举报.
+description: Content moderation platform operations via bytedcli. Router skill for safe domain sub-skills, including puzzle workflows, Safe disposal feature/action queries and copy tickets, Hawk scene metadata and ops queries, Safe sample library queries, SafeMind graph lifecycle/testing/trace operations, OCTP content-safety entity traces, and Digital Employee workflows. Use for 中文意图：内容安全、实体ID链路、送审、机审、处置、沟通、举报、Hawk 平台、Hawk 场景、Hawk ops.
 ---
 
 # Safe Domain
@@ -49,15 +49,17 @@ bytedcli safe config clear --key tenant
 
 ## Sub-Domain Skills
 
-| Sub-Domain         | Skill                             | Description                                                                                                              |
-| ------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| puzzle             | bytedance-safe-puzzle             | Feature platform — features, entities, datasources, tenants, packages, collections                                       |
-| disposal           | bytedance-safe-disposal           | Disposal center — feature/action list queries and copy tickets by platform type, scene, and key                          |
-| hawkpro            | bytedance-safe-hawkpro            | Trace query — list and get hawkpro moderation traces                                                                     |
-| sample             | bytedance-safe-sample             | Sample library query workflow via `safe sample list` / `safe sample query_samples`                                       |
-| digital-employee   | bytedance-safe-digital-employee   | Digital Employee list/agent lookup, graph validation/update, agent simulation, result queries, and sheet/CSV batch task management |
-| safemind           | bytedance-safe-safemind           | Model list, graph lifecycle/test operations, and trace analysis for AI reasoning engine                                  |
+| Sub-Domain         | Skill                             | Description                                                                                                                                                   |
+| ------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| puzzle             | bytedance-safe-puzzle             | Feature platform — features, entities, datasources, tenants, packages, collections                                                                            |
+| disposal           | bytedance-safe-disposal           | Disposal center — feature/action list queries and copy tickets by platform type, scene, and key                                                               |
+| hawk               | bytedance-safe-hawk               | Hawk platform — scene metadata (services/scopes/scenes), ops list, and ops detail queries                                                                     |
+| hawkpro            | bytedance-safe-hawkpro            | Trace query — list and get hawkpro moderation traces                                                                                                          |
+| sample             | bytedance-safe-sample             | Sample library query workflow via `safe sample list` / `safe sample query_samples`                                                                            |
+| digital-employee   | bytedance-safe-digital-employee   | Digital Employee list/agent lookup, graph validation/update, agent simulation, result queries, and sheet/CSV batch task management                            |
+| safemind           | bytedance-safe-safemind           | Model list, graph lifecycle/test operations, and trace analysis for AI reasoning engine                                                                       |
 | eva                | bytedance-safe-eva                | EVA platform — model CRUD, feature/prompt queries and management, prompt create for re-training, evaluation search/create, scene list, and time range queries |
+| sparkinnovation  | bytedance-safe-sparkinnovation  | SparkInnovation 小改变工作流 — list/get/create/update/claim、业务线与部门查询、枚举值查询                                                                                          |
 | tcs                | bytedance-safe-tcs                | TCS project & trace operations — get / clone / update-product-type / get-related-project-list / set-shared-project-split / query-object-ids |
 | tcs-project-switch | bytedance-safe-tcs-project-switch | 队列用工模式切换编排 skill — 主审 → 众包 / 盲审分流 / ProductType 修复                                                   |
 | octp               | bytedance-safe-octp               | OCTP entity trace — query content-safety events by entity ID across review, machine-review, disposal, communication, and report links |
@@ -80,4 +82,3 @@ bytedcli safe digital-employee list --department-ids demo-department-id --projec
 bytedcli safe digital-employee agent list --id demo-employee-id --page 1 --page-size 10
 bytedcli safe digital-employee agent get --id demo-agent-id
 ```
-

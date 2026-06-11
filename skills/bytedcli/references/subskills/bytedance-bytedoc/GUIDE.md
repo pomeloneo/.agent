@@ -1,6 +1,6 @@
 ---
 name: bytedance-bytedoc
-description: "Use when tasks mention ByteDoc, bytedoc, ByteDoc SDK access, Go SDK generation, ByteDoc database authorization, PSM authorization, IAM user permission management, Mongo collections/documents in ByteDoc, ByteDoc slow queries, or ByteDoc/Mongo errors such as not authorized, access denied, forbidden, no permission, BYTEDOC_ACCESS_REQUIRED, BYTEDOC_AMBIGUOUS, or BYTEDOC_UNSAFE_OPERATION_BLOCKED."
+description: "Use when tasks mention ByteDoc, bytedoc, ByteDoc SDK access, multi-language SDK generation (Go/Python/Java/Node.js/C++), ByteDoc database authorization, PSM authorization, IAM user permission management, Mongo collections/documents in ByteDoc, ByteDoc slow queries, or ByteDoc/Mongo errors such as not authorized, access denied, forbidden, no permission, BYTEDOC_ACCESS_REQUIRED, BYTEDOC_AMBIGUOUS, or BYTEDOC_UNSAFE_OPERATION_BLOCKED."
 ---
 
 # bytedcli ByteDoc Skill
@@ -156,7 +156,7 @@ bytedcli --json --site cn --vregion China-North bytedoc shell --service "example
 | 搜索/列表/详情、backend 歧义、site/vRegion、DMS/DBW 路由 | `routing/GUIDE.md` |
 | 集合查看、Mongo shell 查询、文档 list/insert/update、危险操作拦截 | `mongo-ops/GUIDE.md` |
 | `BYTEDOC_ACCESS_REQUIRED`、角色选项、权限预检、PSM/IAM 授权 | `access-workflows/GUIDE.md` |
-| SDK 接入计划、Go SDK 素材、SDK 连接/鉴权/网络失败 | `sdk-access/GUIDE.md` |
+| SDK 接入计划、多语言 SDK 素材、SDK 连接/鉴权/网络失败 | `sdk-access/GUIDE.md` |
 | 慢查询 overview/detail/metrics/index recommend | `slow-query/GUIDE.md` |
 | 错误码分诊与常见失败恢复 | `troubleshooting/GUIDE.md` |
 | ByteDoc SDK 素材确定后的 MongoDB client/query/schema 质量优化 | `mongodb-connection/GUIDE.md`、`mongodb-natural-language-querying/GUIDE.md`、`mongodb-query-optimizer/GUIDE.md`、`mongodb-schema-design/GUIDE.md` |
@@ -183,6 +183,7 @@ bytedcli --json --site cn --vregion China-North bytedoc access ticket create --s
 
 # SDK 计划与诊断
 bytedcli --json --site cn --vregion China-North bytedoc sdk plan --service "example.bytedoc.demo_orders" --backend classic --access-env auto --language go
+# --language 支持 go|python|java|nodejs|cpp（默认 go），sdk generate 同理
 bytedcli --json --site cn --vregion China-North bytedoc sdk doctor --service "example.bytedoc.demo_orders" --backend classic --error-text "not authorized on demo_orders"
 
 # 慢查询

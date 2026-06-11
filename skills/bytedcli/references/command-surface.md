@@ -24,6 +24,7 @@ bytedcli <domain> --help
 ## Code, release, and configuration
 
 - `codebase`: 仓库、创建仓库（默认 validate_only）、MR、Review、Issue、评论、文件、Check Runs、CI、Merge Queue、创建分支。
+- `code-review`: 拉取某个仓库绑定的自定义代码审查规则与工作流。子命令：`rule list`/`workflow list`；`--repo` 接受 `group/project` 或 code.byted.org 的 SSH/HTTPS remote URL，省略时在仓库目录内自动推断。
 - `bam`: PSM 列表/搜索、方法列表/详情、代码生成规则与生成任务、版本列表、IDL 更新。子组：`psm`/`method`/`codegen`/`version`/`idl`；旧的平铺命令保留为隐藏别名。
 - `agw`: AGW 产品列表/搜索/详情、服务搜索、环境注册、IDL 更新与发布。子组：`product`/`service`/`env`/`idl`；旧的平铺命令保留为隐藏别名。
 - `mango`: 芒果平台任务与接口录入管理。子组：`auth`/`space`/`app`/`module`/`task`；
@@ -31,6 +32,7 @@ bytedcli <domain> --help
 - `bes`: BES 元信息修改工单；当前提供 `metadata update --config <json-object>`，内部固定使用 `workflow_config_id=1491`。
 - `bpm`: BPM 工单查询、日志、评论、可执行操作、状态推进与取消。子组：`ticket`。
 - `bytedance-byteflow`: ByteFlow 工作流引擎 skill；覆盖 app / statemachine / revision 查询、workflow JSON/ASL 校验、BRN 资源语法说明，以及带 dry-run 与逐次确认保护的创建/更新/revision 辅助。当前 bytedcli 无 `byteflow` 顶层命令，优先按 skill helper 使用。
+- `lagrange`: Lagrange Admin Torch 发版。子组：`torch release scm build`（build history 表单提交，DEV/LTS 分支、tag、commit 发版，cpu/cuda/mlu Torch 版本选择，release regions、comment、use cache、skip arm、ICM rebuild、自定义镜像、自定义命令）和 `torch release icm build/get`（ICM build history 里的 Build Torch Image 表单提交与 task detail 查询）。默认 dry-run，真实提交需 `--yes`。
 - `test-plan`: Bits 测试计划用例获取，脑图解析并导出 Markdown。
 - `bitsai`: 研发知识、研发资产、TCE/TCC/FaaS/Goofy 等工程问答。
 - `scm`: 仓库列表/搜索/创建/构建/构建日志、版本列表。子组：`repo`（含 `repo version`）；旧的平铺命令保留为隐藏别名。
@@ -103,7 +105,7 @@ bytedcli <domain> --help
 - `blade`: Blade 平台数据同步任务详情查询。子组：`task`；当前支持 `blade task get --id <taskId>`，并内置 `--region mycis` 到 `i18n-bd` 的鉴权站点映射；鉴权优先复用 `blade.byteintl.net` 站点 cookie 与 fresh ByteCloud JWT，Titan Passport 仅作 best-effort 兜底。
 - `tqs`: Table Query Service SQL 执行。
 - `forge`: Forge 任务日志（`forge logs`）。
-- `kaboo`: Kaboo 内部 AI coding 用量追踪器，收集本地工具 (Claude Code / Cursor / Copilot / Codex 等) 的 token 用量并上报到 https://kaboo.bytedance.net，用户可查看个人统计、排行榜、趋势。`bytedcli kaboo` 包装 kaboo-cli 二进制，自动注入 ByteCloud JWT，首次运行自动从 bnpm 安装 `@bytedance-seed/kaboo-cli`。所有 args 透传给 kaboo-cli。
+- `kaboo`: Kaboo 内部 AI coding 用量追踪器，收集本地工具 (Claude Code / Cursor / Copilot / Codex 等) 的 token 用量并上报到 https://kaboo.bytedance.net，用户可查看个人统计、排行榜、趋势。`bytedcli kaboo`包装 kaboo-cli 二进制，自动注入 ByteCloud JWT，首次运行自动从 bnpm 安装`@bytedance-seed/kaboo-cli`。所有 args 透传给 kaboo-cli。
 - `byteio`: ByteIO 埋点 OpenAPI + ByteIO Web BTM 创建；覆盖 `event get`（单个埋点元数据详情）、`event check-params`（埋点参数校验）、`event list`（按邮箱前缀查埋点）、`requirement list/get/locations`、`btm point get/create`、`test-case list/get`、`map locations/events`、`ad tags/labels`。支持 `--region cn|sg`（默认 cn）处理 OpenAPI 查询，POST 类命令支持 `--body-json` 合并请求体；`btm point create` 走 `data.bytedance.net/byteio/api/v1/btm_codes`，优先复用浏览器登录态。
 - `bmt`: Byte Multi-Tenant Platform；覆盖 `service get`、`tag list`、`resource list`、`resource resolve`、`isolation-set list`、`user-role get`。服务级命令公开入口优先用 `--psm`，CLI 会先解析 `psm -> service`，再查询标签、资源和 user role；`--type mq` 可解析 RocketMQ `cluster/topic`，`--type rds` 可解析 RDS `psm/db_name`，`resource resolve` 省略 `--type` 时会自动尝试 `mq -> rds`。
 - `es`: Elasticsearch DSL 查询、mapping 查询与更新。
@@ -112,7 +114,7 @@ bytedcli <domain> --help
 - `eventbus`: Eventbus event、client、storage、mirror、producer、consumer 查询，消息查询与 PPE 消息发送；详细参数见 `bytedance-eventbus` skill。
 - `tos`: bucket、用户信息（`get-user-info`）、用户记录、站点与 vregion。`user-info` 已重命名为 `get-user-info`，旧名保留为隐藏别名。
 - `dolphin`: 动态决策平台（事件、规则组、规则）查询与测试用例检查。子组：`event`（含 `event group`/`event var`/`event param`）/`group`（含 `group factor`/`group feature-env`/`group testcase`）/`rule`；旧的平铺命令保留为隐藏别名。
-- `safe`: 内容治理平台。认证（SSO 或 cookie 登录）、配置管理（tenant/business）、Puzzle 特征/实体/数据源/租户/包/集合、样本查询、Hawkpro trace、SafeMind model/graph/trace（含 test-node），以及 Digital Employee agent、图实例校验/更新、run-agent 试运行、仿真结果和批量仿真任务。子组：`puzzle`、`sample`、`hawkpro`、`safemind`、`eva`、`de` / `digital-employee`；`ds` 是 `datasource` 别名，`pkg` 是 `package` 别名。相关子命令支持 `--tenant` 选项，优先级：`--tenant` > `SAFE_TENANT` env > config > 默认 `ecology`。
+- `safe`: 内容治理平台。认证（SSO 或 cookie 登录）、配置管理（tenant/business）、Puzzle 特征/实体/数据源/租户/包/集合、样本查询、Hawk scene/service/scope 元数据与 ops list/get 查询、Hawkpro trace、SafeMind model/graph/trace（含 test-node），以及 Digital Employee agent、图实例校验/更新、run-agent 试运行、仿真结果和批量仿真任务。子组：`puzzle`、`sample`、`hawk`（`service list` / `scope list` / `scene list` / `ops list|get`）、`hawkpro`、`safemind`、`eva`、`de` / `digital-employee`；`ds` 是 `datasource` 别名，`pkg` 是 `package` 别名。相关子命令支持 `--tenant` 选项，优先级：`--tenant` > `SAFE_TENANT` env > config > 默认 `ecology`。
 
 ## Runtime, logs, and observability
 
@@ -161,6 +163,7 @@ bytedcli <domain> --help
 
 - “帮我登录 / 看当前账号 / 拿 token”：`auth`
 - “看 MR / 发 review / 查 CI / 回评论”：`codebase`
+- “查这个仓库的自定义代码审查规则 / 审查工作流”：`code-review`
 - “查某个 TTP-US npm 包在 Luban 里是否存在 / 看某个版本前缀 / 发布 PyPI 制品版本”：`luban`
 - “下载 LynxExample / 查 LynxExample tag、commitHash、downloadUrl”：`lynx`
 - “更新配置 / 发配置 / 审批发布单”：`tcc`
@@ -175,6 +178,7 @@ bytedcli <domain> --help
 - “查服务树 / 搜节点 / 看父子层级”：`bytetree`
 - “看 FaaS 服务 / cluster / trigger / 日志 / 调用函数 / 发布 / 中止发布 / 代码版本 / 模板 / 删除服务”：`faas`
 - “查 ByteFlow app / 状态机 / revision / 校验 workflow JSON / 创建或更新 ByteFlow revision”：`bytedance-byteflow`
+- “发 lg-admin / Lagrange Admin Torch 版本 / 发布对应 ICM 镜像 / 指定 cpu cuda mlu Torch 版本 / usecache / ICM rebuild / skip arm”：`lagrange torch release scm build` / `lagrange torch release icm build`
 - “按 MCP 名称查 TAE server_id / 查询 TAE Agent/Sandbox / 录入 TAE MCP tools / 修复 MCP Input Schema / 发布 MCP server revision / 调研 TAE Memory Skill API”：`bytedance-tae`
 - “看火山引擎函数 / 实例 / 实例日志 / 发布状态 / 发布记录 / 发起发布 / sandbox / sandbox image / CR / TLS topic / TLS 日志 / VKE / VPC / NAT 网关 / 子网 / 安全组 / 火山账号列表 / SSO 登录火山引擎”：`volcano`
 - “查 Starling 项目 / 创建 Starling space / 搜索文案 key / 配置 Starling AKSK / 用 shortcut +list +create +info / 用 API Runner 调 Starling OpenAPI / 搜索 Starling 文档和知识 / 升级 starling-cli”：`starling`

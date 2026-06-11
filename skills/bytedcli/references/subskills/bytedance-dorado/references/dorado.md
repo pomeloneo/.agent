@@ -2,7 +2,9 @@
 
 Dorado is part of the DataLeap platform for data pipeline orchestration. This CLI provides commands to manage batch tasks, view instances, and update SQL queries.
 
-Supported built-in regions: `cn`, `sg`, `va`, `mycis`, `gcp`/`eu`, `us-ttp`, `us-eastred`, `eu-ttp2`, `eu-compliance2` (aliases `ie2`, `eu-ttp-gp`), `boe`, `boei18n`, `gp-us`.
+Supported built-in regions: `cn`, `sg`, `sglark`, `jplark`, `uspipo` (alias `gp-us`), `va`, `mycis`, `gcp`/`eu`, `us-ttp`, `us-eastred`, `eu-ttp2`, `eu-compliance2` (aliases `ie2`, `eu-ttp-gp`), `boe`, `boei18n`.
+
+`sglark` / `jplark` / `uspipo` / `mycis` are built in and should be called directly with `--region`. If the target IDC/region is not covered by the built-in list, add a custom region in `~/.local/share/bytedcli/data/.dorado.env` or `./.dorado.env`. When `DORADO_REGION_<NAME>_SITE` is omitted, Dorado auth follows the global `--site` / `BYTEDCLI_CLOUD_SITE`.
 
 Custom regions can be configured via `.dorado.env`:
 
@@ -11,18 +13,15 @@ DORADO_REGION_PIPOUS_API_BASE_URL=https://dataleap-pipous.example.net/dorado_api
 DORADO_REGION_PIPOUS_ALIASES=us_pipo,pipo-us,pipo_us,uspipo
 DORADO_REGION_PIPOUS_GROUP_NAME=sample_group
 DORADO_REGION_PIPOUS_PROJECT_PREFIX=sample_group
-
 # Optional: only set this for Dataleap environments that require browser-session cookies
 # DORADO_REGION_PIPOUS_AUTH=session
 ```
 
-If the target IDC/region is not covered by the built-in list, prefer adding a custom region in `.dorado.env` instead of modifying code. When `DORADO_REGION_<NAME>_SITE` is omitted, Dorado auth follows the global `--site` / `BYTEDCLI_CLOUD_SITE`.
+`DORADO_REGION_<NAME>_AUTH` supports `jwt|auto|session`. Built-in regions default to `jwt`, except `sglark`, `jplark`, `uspipo`, and `mycis`, which are built in as `session`; custom regions default to `auto`. Use `session` for known special Dataleap environments that require browser-session cookies in addition to JWT. Without `AUTH=session`, keep the normal JWT flow first and only switch to `bytedcli auth login --session` when the target region shows explicit web-auth signals, such as JSON output already including `error.hint` / `error.auth_command`, login redirects, or web-side auth failures.
 
-`DORADO_REGION_<NAME>_AUTH` supports `jwt|auto|session`. Built-in regions default to `jwt`, except `mycis` and `gp-us`, which are built in as `session`; custom regions default to `auto`. Use `session` for known special Dataleap environments that require browser-session cookies in addition to JWT. Without `AUTH=session`, keep the normal JWT flow first and only switch to `bytedcli auth login --session` when the target region shows explicit web-auth signals, such as JSON output already including `error.hint` / `error.auth_command`, login redirects, or web-side auth failures.
+Custom group-based Dataleap regions use `DORADO_REGION_<NAME>_GROUP_NAME` and `DORADO_REGION_<NAME>_PROJECT_PREFIX`; Dorado task-list referers then use `groupName=<group>` and `project=<projectPrefix>_<projectId>` to match web console routing.
 
-Custom group-based Dataleap regions can also set `DORADO_REGION_<NAME>_GROUP_NAME` and `DORADO_REGION_<NAME>_PROJECT_PREFIX`; Dorado task-list referers then use `groupName=<group>` and `project=<projectPrefix>_<projectId>` to match web console routing.
-
-When a user already provides an unknown custom region name, do not probe built-in regions as a fallback. Prefer configuring `.dorado.env` first and let the CLI return a direct configuration hint if the region is still unknown.
+When a user already provides an unknown custom region name, do not probe built-in regions as a fallback. Prefer configuring `DORADO_REGION_<NAME>_API_BASE_URL` in `.dorado.env`, and let the CLI return a direct configuration hint if the region is still unknown.
 
 ## Web URL formats
 
@@ -456,6 +455,13 @@ bytedcli dorado task update-conf [taskId] [options]
 - `--patch <json>` - Inline JSON object as conf patch (mutually exclusive with `--task-file`)
 - `--expected-type <type>` - Optional sanity guard: fail before PUT when `draft.type` doesn't match (e.g. `stream_channel_rocketmq_hive`, `hive->clickhouse`)
 - `--type <type>` - Optional override for the batch / DTS draft top-level `type` field (e.g. promote a freshly-created `common-dts-batch` shell into `hive->clickhouse`); realtime stream drafts reject this override and preserve the existing `type`
+- `--queue <queue>` - Stream DTS draft: yarn queue to place the task on (e.g. `root.demo_flink_queue`). Only applied to realtime stream drafts
+- `--cluster <cluster>` - Stream DTS draft: yarn cluster (e.g. `Demo-Cluster`)
+- `--dc <dc>` - Stream DTS draft: data center (e.g. `my2`)
+- `--priority <priority>` - Stream DTS draft: task priority (e.g. `normal`)
+- `--engine-id <id>` - Stream DTS draft: engine id (default `0`)
+- `--enable-failover` - Stream DTS draft: enable failover (default `false`)
+- `--owner <owner>` - Stream DTS draft: `ownerUserName` for the saved draft
 - `-r, --region <region>` - Dorado region (default: `cn`)
 
 Exactly one of `--task-file` / `--patch` is required.
@@ -469,7 +475,7 @@ Exactly one of `--task-file` / `--patch` is required.
 
 **API:** `POST /task/{taskId}/draft`
 
-For realtime stream drafts (for example `kafka2clickhouse`, or any task whose `conf.typeGroup=stream` / `type` starts with `stream_channel_`), bytedcli automatically switches to `POST /realtime/{taskId}/draft` and preserves the original top-level `conf.typeGroup` instead of rewriting it. The captured realtime draft body only supports `taskId + conf + name + description`, so `--type` is rejected in this mode.
+For realtime stream drafts (for example `kafka2clickhouse`, or any task whose `conf.typeGroup=stream` / `type` starts with `stream_channel_`), bytedcli automatically switches to `POST /realtime/{taskId}/draft` and preserves the original top-level `conf.typeGroup` instead of rewriting it. The base realtime draft body carries `taskId + conf + name + description`, so `--type` is rejected in this mode. For DTS streaming tasks (`common-dts-stream`, e.g. bmq->hive) the realtime body additionally accepts the runtime placement fields `queue` / `cluster` / `dc` / `priority` / `engineId` / `enableFailover` / `ownerUserName`; supply them via `--queue` / `--cluster` / `--dc` / `--priority` / `--engine-id` / `--enable-failover` / `--owner`. These extra fields are only attached when at least one of them is provided, so `kafka2clickhouse` runtime-parameter saves keep the minimal body.
 
 **Example (from task development URL `.../node/306685092?project=sg_300002016`):**
 
@@ -494,9 +500,21 @@ bytedcli dorado task update-conf 306685092 --task-file /tmp/demo-task.json --reg
 **Example (promote a `common-dts-batch` shell into `hive->clickhouse`):**
 
 ```bash
+# Resolve the HSQL task-template root folder.
+bytedcli dorado task template root-folder get \
+  --region sg \
+  --project-id 12345
+
+# Create an HSQL task template; --folder-id is auto-resolved from --project-id.
+bytedcli dorado task template create \
+  --region sg \
+  --project-id 12345 \
+  --name demo-template \
+  --description "sample template"
+
 # 1) Create the shell (server-side type=common-dts-batch).
 bytedcli dorado task create --type hive-clickhouse \
-  --project-id 1200002135 --folder-id 1200221500 \
+  --project-id 12345 --folder-id 67890 \
   --name hive2ch_demo --region mycis
 
 # 2) Write reader=hive / writer=clickhouse via a conf patch and bump top-level type.
@@ -508,6 +526,39 @@ bytedcli dorado task update-conf 1204206582 \
   --type 'hive->clickhouse' \
   --region mycis
 ```
+
+**Example (end-to-end `common-dts-stream` bmq->hive: target table + queue + resources):**
+
+When the user only gives the bmq source, the agent must ask for the hive target table (there is no capability to create a hive table from a bmq topic), pick a healthy queue, and set sensible Flink resources before saving — do not save with empty/default placeholders.
+
+```bash
+# 1) Create the stream shell (server-side type=common-dts-stream via /realtime/create).
+bytedcli dorado task create --type common-dts-stream \
+  --project-id 300003392 --folder-id 300202455 \
+  --name demo_dts_stream_task --region sg
+
+# 2) Hive target table: bmq topic metadata has NO field schema, so there is NO way to derive
+#    or auto-create a hive table from a bmq topic. If the user did not provide a hive target
+#    table, ask them to provide an existing database + table. Once they do, you can read the
+#    columns of that EXISTING table via the top-level `hive` command (NOT `dorado hive`):
+bytedcli hive ddl <db> <existing_table> --region sg
+
+# 3) Pick a healthy stream queue (lowest Allocated Rate / most Free CPU & Memory).
+bytedcli dorado project yarn-queues --project-id 300003392 --task-type common-dts-stream --region sg
+
+# 4) Save the full conf and pin runtime placement + resources.
+#    /tmp/bmq2hive-conf.json holds {"typeGroup":"stream","configuration":{
+#      "reader":{"type":"bmq","parameter":{"fieldSyncMode":"auto", ...}},
+#      "writer":{"type":"hive","parameter":{"databaseName":"...","tableName":"...","partitions":[{"name":"date","type":"TIME"},{"name":"hour","type":"TIME"}]}},
+#      "operator":{"parameter":{"autoParseConnectors":true,"commonConfig":{
+#         "tmNum":4,"containerVcoresD":4,"tmMemoryMb":4096,"slotsPerTm":4,"jmMemoryVcoresD":3,"jmMemoryMb":4096},"enableIntelligent":false}}}}
+bytedcli dorado task update-conf 306904995 \
+  --task-file /tmp/bmq2hive-conf.json \
+  --queue root.demo_flink_queue --cluster Demo-Cluster --dc my2 \
+  --priority normal --owner demo.user --region sg
+```
+
+`commonConfig` field mapping (matches the "资源设置" panel): `tmNum`=TaskManager 个数, `containerVcoresD`=单 TaskManager CPU 数, `tmMemoryMb`=单 TaskManager 内存(MB), `slotsPerTm`=单 TaskManager slot 数, `jmMemoryVcoresD`=JobManager CPU 数, `jmMemoryMb`=JobManager 内存, `enableIntelligent`=启用智能资源. Tune `tmNum`/`slotsPerTm` to the topic throughput instead of copying the defaults.
 
 **When to use which `update` command:**
 
@@ -1547,7 +1598,7 @@ If this returns no `nodeUid`, verify `--region`, `--project-id`, `--task-id`, an
 
 ### adhoc exec
 
-Execute an ad-hoc SQL query via the Dorado ad-hoc query API. For Hive SQL, use a pre-existing **ad-hoc query task** (临时查询) as the execution carrier — create one in Dorado (Project > Ad-hoc Query > New Query, 即"临时查询"), and it is recommended to switch the engine to Spark on the query page before saving. For Doris SQL, use a `doris_sql` task as the execution carrier; the CLI detects that type and submits through the Doris IDE debug endpoint. The task only needs to be created once; dc/cluster/queue are inherited from the saved configuration when applicable. bytedcli auto-loads `DORADO_EXEC_TASK_ID` and Doris-specific `DORADO_DORIS_EXEC_TASK_ID` from `~/.local/share/bytedcli/data/.dorado.env` and the current directory's `./.dorado.env`, with the local project file taking precedence over the global file. In default/auto mode, ad-hoc task-id defaults use `DORADO_EXEC_TASK_ID`; `DORADO_DORIS_EXEC_TASK_ID` is used only when `--engine-type doris_sql` is explicitly set.
+Execute an ad-hoc SQL query via the Dorado ad-hoc query API. For Hive SQL, use a pre-existing **ad-hoc query task** (临时查询) as the execution carrier — create one in Dorado (Project > Ad-hoc Query > New Query, 即"临时查询"), and it is recommended to switch the engine to Spark on the query page before saving. For Doris SQL, use a `doris_sql` task as the execution carrier; the CLI detects that type and submits through the Doris IDE debug endpoint. The task only needs to be created once; dc/cluster/queue are inherited from the saved configuration when applicable. Default task IDs can be supplied through `DORADO_EXEC_TASK_ID` and Doris-specific `DORADO_DORIS_EXEC_TASK_ID`. In default/auto mode, ad-hoc task-id defaults use `DORADO_EXEC_TASK_ID`; `DORADO_DORIS_EXEC_TASK_ID` is used only when `--engine-type doris_sql` is explicitly set.
 
 **Safety check:** Before executing, the command verifies that the carrier task is **not** an online production task. If the task is online, execution is blocked to prevent unintended modifications to production task state. Use `--force` to bypass this check (not recommended).
 
@@ -1713,6 +1764,92 @@ bytedcli dorado adhoc history --task-id 119886373 --json
 
 ---
 
+### flink monitor get
+
+Get monitor URLs (Grafana metrics, ByteLake monitor, Flink Web UI, etc.) for a Dorado realtime streaming (Flink) task.
+
+```bash
+bytedcli dorado flink monitor get [options]
+```
+
+**Options:**
+
+- `--task-id <taskId>` - Dorado task ID (positive integer, required)
+- `-r, --region <region>` - Dorado region (default: "cn")
+
+**Examples:**
+
+```bash
+# Text output (default)
+bytedcli dorado flink monitor get --task-id 100274211 --region cn
+
+# JSON output
+bytedcli dorado flink monitor get --task-id 100274211 --region sg -j
+```
+
+The response includes `metricMonitorUrl`, `bytelakeMonitorUrl`, `customMonitorUrl`, `dtopMonitorUrl`, `yarnAppUrl` (Flink Web UI proxy), and `paimonMetricUrl`. Any field may be `null` when the underlying integration is not configured for the task.
+
+---
+
+### flink operation-log list
+
+List operation logs (start / restart / stop / edit / etc.) of a Dorado realtime streaming (Flink) task. Use the `log_id` of `start` / `restart` entries with `flink operation-log get` to fetch the event timeline.
+
+```bash
+bytedcli dorado flink operation-log list [options]
+```
+
+**Options:**
+
+- `--task-id <taskId>` - Dorado task ID (positive integer, required)
+- `-r, --region <region>` - Dorado region (default: "cn")
+- `--page <page>` - Page number (default: 1)
+- `--page-size <size>` - Page size (default: 20)
+
+**Examples:**
+
+```bash
+# Default page
+bytedcli dorado flink operation-log list --task-id 100274211 --region cn
+
+# Custom pagination
+bytedcli dorado flink operation-log list --task-id 100274211 --region sg --page 1 --page-size 20
+
+# JSON output
+bytedcli dorado flink operation-log list --task-id 100274211 --region sg -j
+```
+
+Each log entry contains `logId`, `typeAlias` (e.g. `start`, `restart`, `stop`), `message`, `user`, `createTime`, and `version`. Total count is returned only when the backend exposes it.
+
+---
+
+### flink operation-log get
+
+Get the event timeline (with the Flink Web UI link) of a single Dorado realtime task operation log. Only `start` / `restart` typed logs carry events; for other log types the response will report empty events.
+
+```bash
+bytedcli dorado flink operation-log get [options]
+```
+
+**Options:**
+
+- `--log-id <logId>` - Operation log ID from `flink operation-log list` (positive integer, required)
+- `-r, --region <region>` - Dorado region (default: "cn")
+
+**Examples:**
+
+```bash
+# Text output (default)
+bytedcli dorado flink operation-log get --log-id 83863872 --region cn
+
+# JSON output
+bytedcli dorado flink operation-log get --log-id 83863872 --region sg -j
+```
+
+The response includes `flinkWebUi` (Flink Web UI proxy URL) and an `events` array. Each event contains `message`, `type`, `createTime`, `applicationId`, `applicationUrl`, `logUrl`, and `streamInstanceId`.
+
+---
+
 ## Task Types
 
 | Type               | Description                                                         | Managed via                    |
@@ -1727,6 +1864,7 @@ bytedcli dorado adhoc history --task-id 119886373 --json
 | `hive->bmq`        | DTS task - syncs data from Hive to BMQ                              | `task` commands                |
 | `hive->clickhouse` | DTS task - syncs data from Hive to ClickHouse                       | `task` commands                |
 | `common-dts-batch` | Generic DTS batch task                                              | `task` commands                |
+| `common-dts-stream`| Generic DTS streaming task (e.g. bmq->hive); created via `/realtime/create` | `task` commands         |
 
 ## Instance Status
 

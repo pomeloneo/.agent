@@ -1,6 +1,6 @@
 ---
 name: bytedance-dorado
-description: "Operate Dorado (DataLeap) via bytedcli: list projects/tasks/instances, get task details, create tasks, transfer task owners, rename tasks/IDE nodes, update SQL, diff versions, view history, execute adhoc Hive/Doris SQL, manage task drafts (update/test/explain), inspect deploy package DIFF SQL, validate HSQL/DTS drafts, manage python/notebook nodes, fetch notebook run result JSON, resolve nodeUid from taskId, browse folders, manage backfills, query DECC endpoints/datas, list project UDFs, update resources, and diagnose failures with Megatron/Spark History/logs. Use when users mention Dorado, DataLeap, batch tasks, task owner transfer, task/node rename, deploy packages, DIFF SQL, HSQL/DTS drafts, notebook results, resource/explain, taskId URLs, instance failures, slow runs, backfill, spark-jar config, or DECC."
+description: "Operate Dorado (DataLeap) via bytedcli: list projects/tasks/instances, get task details, create tasks, transfer task owners, rename tasks/IDE nodes, update SQL, diff versions, view history, execute adhoc Hive/Doris SQL, manage task drafts (update/test/explain), inspect deploy package DIFF SQL, validate HSQL/DTS drafts, manage python/notebook nodes, fetch notebook run result JSON, resolve nodeUid from taskId, browse folders, manage backfills, query DECC endpoints/datas, list project UDFs, update resources, query Flink realtime task monitor URLs and operation logs, and diagnose failures with Megatron/Spark History/logs. Use when users mention Dorado, DataLeap, batch tasks, task owner transfer, task/node rename, deploy packages, DIFF SQL, HSQL/DTS drafts, notebook results, resource/explain, taskId URLs, instance failures, slow runs, backfill, spark-jar config, Flink realtime tasks, Flink monitor URLs, Flink Web UI, operation logs, or DECC."
 ---
 
 # bytedcli Dorado
@@ -34,6 +34,7 @@ bytedcli <command> [options]
 - 下载 Dorado 实例日志（页面态 cookie，`dorado download-instance-log`）
 - 获取 notebook 实例“运行结果”JSON（`dorado instance notebook-result`，默认读取 `{taskId}_{instanceId}.ipynb`）
 - 创建任务（指定 `--type`）
+- Resolve the task-template root folder with `bytedcli dorado task template root-folder get --region <region> --project-id <project-id>`, then create an HSQL task template with `bytedcli dorado task template create --region <region> --project-id <project-id> --name <template-name> [--description <text>]`. `template create` can also accept `--folder-id <folder-id>` directly; when `--folder-id` is omitted it resolves the template root folder from `--project-id`. The create command posts a template form to the region's Dorado `/develop` endpoint (`type=template`, `subType=hsql`); use placeholder values such as `demo-template`, `12345`, and `67890` in examples.
 - 转交任务 owner（`dorado task transfer-owner`）
 - 更新 SQL 任务（hsql/fsql/stream_sql）的查询（`task update --query`/`--type`）
 - MySQL->Hive binlog 状态检查与接入（`task binlog status` / `task binlog connect`）
@@ -69,8 +70,11 @@ bytedcli <command> [options]
 - 列出所有项目资源，包括文件、jar 包、zip、scm、image、thrift 和目录（`tree-nodes resource list`）
 - 更新资源详情，包括 scmVersion（`tree-nodes resource update`）
 - 创建并保存新的函数（`tree-nodes function create`）
-- 当目标机房不在内置 region 列表里时，可先通过 `.dorado.env` 配置自定义 region，再继续调用 Dorado 命令
-- 内置 region 里 `mycis` 和 `gp-us` 固定走页面态 session；其余 built-in region 默认走 JWT。自定义 region 可通过 `.dorado.env` 中的 `DORADO_REGION_<NAME>_AUTH=session` 显式声明页面态授权。未显式声明时，先按正常请求处理，只有命中明确的页面态鉴权迹象时，再执行 `bytedcli auth login --session`
+- 获取 Flink 实时任务监控 URL（Grafana 指标、ByteLake、Flink Web UI 等）：`flink monitor get`
+- 列出 Flink 实时任务运维操作日志（启动、重启、停止等）：`flink operation-log list`
+- 查看 Flink 单条操作日志详情（含事件时间线与 Flink Web UI 链接，仅 start/restart 类日志包含 events）：`flink operation-log get`
+- 当目标机房不在内置 region 列表里时，优先引导用户在环境变量或 `~/.local/share/bytedcli/data/.dorado.env` / `./.dorado.env` 中配置 `DORADO_REGION_<NAME>_API_BASE_URL`，再继续调用 Dorado 命令
+- 内置 region 里 `sglark`、`jplark`、`uspipo` 和 `mycis` 固定走页面态 session；其余 built-in region 默认走 JWT。自定义 region 可通过 `DORADO_REGION_<NAME>_AUTH=session` 显式声明页面态授权。未显式声明时，先按正常请求处理，只有命中明确的页面态鉴权迹象时，再执行 `bytedcli auth login --session`
 - 对 Dorado / DataLeap 的 `MY-BD` 环境，请特别使用 `bytedcli --site i18n-bd auth login --session`（或 `BYTEDCLI_CLOUD_SITE=i18n-bd bytedcli auth login --session`）先准备浏览器态 session；该环境的页面能力依赖 session/cookie，单独做普通 `auth login` 往往不够。
 
 ## Agent Guidance
@@ -101,7 +105,7 @@ bytedcli <command> [options]
 - Dorado 任务页“任务监控/基线监控”配置默认走 `GET /dorado_api/task/{taskId}/alarms?projectId={projectId}&supportTaskAlarm=true`
 - 读取任务监控配置时，优先使用 `dorado task alarms --task-id <taskId> --project-id <projectId> --region <region>`；不要再复用 `task get` 猜测 `alarmRules`/`baseline` 字段是否存在
 - 当用户已经明确给出一个不在内置列表里的 Dorado region 名称时，不要遍历或试探 `cn/sg/va/mycis/gcp/boe/boei18n`
-- 先检查是否已存在对应的 `.dorado.env` 配置；若不存在，优先引导用户配置 `DORADO_REGION_<NAME>_API_BASE_URL`
+- 优先引导用户在环境变量或 `~/.local/share/bytedcli/data/.dorado.env` / `./.dorado.env` 中配置 `DORADO_REGION_<NAME>_API_BASE_URL`
 - 若该机房已知依赖页面态 cookie，再补充 `DORADO_REGION_<NAME>_AUTH=session`
 - 只有用户没有提供 region 名称时，才允许在内置 region 中选择或追问
 - Dorado 审批提交类命令（如 `dorado task commit-approval`、`dorado node submit-approval`）中的 `--review-policy-id`、`--review-users` 必须由用户按当前项目显式提供；不要从项目默认配置、历史记录或页面上下文自动推断后代填
@@ -139,7 +143,7 @@ grep -nE 'NoPrivilegeException|permission|privilege|CalciteContextException|Sema
 
 ## Quick start
 
-Commands are grouped under `dorado project`, `dorado task`, `dorado folder`, `dorado instance`, `dorado adhoc`, `dorado backfill`, `dorado spark-jar`, and `dorado decc`. Old flat names (e.g. `dorado list-projects`, `dorado get-task`, `dorado adhoc-exec`, `dorado folder-structure`, `dorado folder-children`, `dorado task diff-query`, `dorado task list-versions`, `dorado task update-query`) still work as hidden aliases.
+Commands are grouped under `dorado project`, `dorado task`, `dorado folder`, `dorado instance`, `dorado adhoc`, `dorado backfill`, `dorado spark-jar`, `dorado decc`, and `dorado flink` (realtime). Old flat names (e.g. `dorado list-projects`, `dorado get-task`, `dorado adhoc-exec`, `dorado folder-structure`, `dorado folder-children`, `dorado task diff-query`, `dorado task list-versions`, `dorado task update-query`) still work as hidden aliases.
 
 ```bash
 # 创建 Spark-jar 配置（写入到 node draft）
@@ -204,6 +208,13 @@ bytedcli dorado task create --type common-dts-batch --project-id 300002016 --fol
 # 创建 hive->clickhouse 任务（壳子与 common-dts-batch 同形态，type 升级在 update-conf 阶段完成）
 bytedcli dorado task create --type hive-clickhouse --project-id 1200002135 --folder-id 1200221500 --name "hive2ch_demo" --region mycis
 bytedcli dorado task update-conf 1204206582 --task-file ./hive2ch-patch.json --type 'hive->clickhouse' --region mycis
+
+# 创建 DTS 流式任务（common-dts-stream，例如 bmq->hive），走 /realtime/create 接口，与 common-dts-batch 相对
+bytedcli dorado task create --type common-dts-stream --project-id 300003392 --folder-id 300202455 --name "demo_dts_stream_task" --region sg
+
+# 保存 DTS 流式任务草稿：写入完整 conf（reader=bmq / writer=hive / operator=flink）并指定运行队列
+# 队列可先用 `project yarn-queues --task-type common-dts-stream` 找到最空的流式队列
+bytedcli dorado task update-conf 306904995 --task-file ./bmq2hive-conf.json --queue root.demo_flink_queue --cluster Demo-Cluster --dc my2 --priority normal --owner demo.user --region sg
 
 # 转交任务 owner（默认会读取任务名；单任务可用 --name 显式传入）
 bytedcli dorado task transfer-owner --task-id <task-id> --project-id <project-id> --owner demo-owner --region va
@@ -600,7 +611,7 @@ bytedcli dorado task rename --task-id 120933017 --project-id 8026 --name new_tas
 #
 #   只需创建一次，后续 exec 会自动继承该任务的 dc/cluster/queue 配置
 #   ⚠️ --task-id 必须是临时查询任务；若传入已在线的生产任务，命令会拒绝执行以避免修改生产任务状态（--force 可绕过）
-#   支持自动读取 ~/.local/share/bytedcli/data/.dorado.env 与当前目录 ./.dorado.env 中的 DORADO_EXEC_TASK_ID；当前目录配置会覆盖全局配置，适合按项目保存不同 task-id
+#   可通过 DORADO_EXEC_TASK_ID 指定默认执行载体任务；适合按项目保存不同 task-id
 #   Doris SQL 可使用 doris_sql 任务作为执行载体；默认/auto 模式只读取 DORADO_EXEC_TASK_ID；显式 --engine-type doris_sql 时才优先读取 DORADO_DORIS_EXEC_TASK_ID
 
 # 简单 SQL（默认同步等待结果）
@@ -636,6 +647,19 @@ bytedcli dorado decc endpoints --database demo_db --decc-region US-TTP --target-
 
 # 查询 endpoint 下注册的所有 table 及 data ID
 bytedcli dorado decc datas --endpoint-id 7221281395346276614 --decc-region US-EastRed --target-region Singapore-Central --region sg
+
+# Flink 实时任务监控与运维日志
+# 获取实时任务监控 URL（Grafana 指标、ByteLake、Flink Web UI 等）
+bytedcli dorado flink monitor get --task-id 100274211 --region cn
+bytedcli dorado flink monitor get --task-id 100274211 --region sg -j
+
+# 列出实时任务运维操作日志（启动/重启/停止/编辑等；start/restart 的 log_id 可用于查看事件时间线）
+bytedcli dorado flink operation-log list --task-id 100274211 --region cn
+bytedcli dorado flink operation-log list --task-id 100274211 --region sg --page 1 --page-size 20
+
+# 查看单条操作日志详情（含 Flink Web UI 链接和事件时间线，仅 start/restart 类日志有 events）
+bytedcli dorado flink operation-log get --log-id 83863872 --region cn
+bytedcli dorado flink operation-log get --log-id 83863872 --region sg -j
 ```
 
 ### DECC Region 枚举值
@@ -664,6 +688,9 @@ BYTEDCLI_CLOUD_SITE=i18n-tt bytedcli dorado task advanced-search --search-scope 
 | ---------------- | ------------------------------------------------ | -------------------------------- | --------------------------- |
 | `cn`             | China (default)                                  | data.bytedance.net               | —                           |
 | `sg`             | Singapore Central                                | dataleap-sg.tiktok-row.net       | —                           |
+| `sglark`         | Singapore Lark warehouse                         | dataleap-sglark.bytedance.net    | —                           |
+| `jplark`         | Japan Lark warehouse                             | dataleap-jp.byteintl.net         | —                           |
+| `uspipo`         | US PIPO warehouse; alias `gp-us`                 | dataleap-pipo-us.byteintl.net    | —                           |
 | `va`             | US East (Virginia)                               | dataleap-va.tiktok-row.net       | —                           |
 | `mycis`          | ByteIntl MYCIS                                   | dataleap-mycis.byteintl.net      | —                           |
 | `gcp` / `eu`     | EU Compliance2                                   | dataleap.tiktok-eu.net           | dataleap-gcp.tiktok-row.net |
@@ -673,27 +700,25 @@ BYTEDCLI_CLOUD_SITE=i18n-tt bytedcli dorado task advanced-search --search-scope 
 | `eu-compliance2` | EU Compliance2 (IE2); aliases `ie2`, `eu-ttp-gp` | dataleap-gp-ttp-eu.tiktok-eu.net | dataleap-ie2.tiktok-row.net |
 | `boe`            | BOE (CN)                                         | data-boe.bytedance.net           | —                           |
 | `boei18n`        | BOE (International)                              | data-boe.bytedance.net           | —                           |
-| `gp-us`          | GP US                                            | dataleap-pipo-us.byteintl.net    | —                           |
+
+`sglark` / `jplark` / `uspipo` / `mycis` are built in and should be called directly with `--region`.
 
 Custom regions can be added via `~/.local/share/bytedcli/data/.dorado.env` or `./.dorado.env`, for example:
 
 ```env
 DORADO_REGION_PIPOUS_API_BASE_URL=https://dataleap-pipous.example.net/dorado_api
 DORADO_REGION_PIPOUS_ALIASES=us_pipo,pipo-us,pipo_us,uspipo
-
 # Optional: set PAGE_ORIGIN when the web UI uses a different domain than the API
 # DORADO_REGION_PIPOUS_PAGE_ORIGIN=https://dataleap-pipous-page.example.net
-
 # Optional: set REQUEST_VREGION when the API gateway expects a vregion different from the region key
 # DORADO_REGION_PIPOUS_REQUEST_VREGION=us-pipo-prod
-
 # Optional: only set this for Dataleap environments that require browser-session cookies
 # DORADO_REGION_PIPOUS_AUTH=session
 ```
 
 If the built-in region list does not cover the target IDC/region, prefer adding a custom region in `.dorado.env` instead of changing code. When `DORADO_REGION_<NAME>_SITE` is omitted, Dorado auth follows the global `--site` / `BYTEDCLI_CLOUD_SITE` setting.
 
-`DORADO_REGION_<NAME>_AUTH` supports `jwt|auto|session`. Built-in regions default to `jwt`, except `mycis` and `gp-us`, which are built in as `session`; custom regions default to `auto`. Use `session` for known special Dataleap environments that require browser-session cookies in addition to JWT. Without `AUTH=session`, keep the normal JWT flow first and only switch to `bytedcli auth login --session` when the target region shows explicit web-auth signals, such as JSON output already including `error.hint` / `error.auth_command`, login redirects, or web-side auth failures.
+`DORADO_REGION_<NAME>_AUTH` supports `jwt|auto|session`. Built-in regions default to `jwt`, except `sglark`, `jplark`, `uspipo`, and `mycis`, which are built in as `session`; custom regions default to `auto`. Use `session` for known special Dataleap environments that require browser-session cookies in addition to JWT. Without `AUTH=session`, keep the normal JWT flow first and only switch to `bytedcli auth login --session` when the target region shows explicit web-auth signals, such as JSON output already including `error.hint` / `error.auth_command`, login redirects, or web-side auth failures.
 
 ## Notes
 
@@ -731,6 +756,7 @@ If the built-in region list does not cover the target IDC/region, prefer adding 
 - `tree-nodes children` 返回的是 IDE 层的 UID-based URI（如 `task:///f{numericId}/{nodeUid}`），与 `folder-structure`/`folder-children` 返回的老式数字 ID 不同；创建 `node create` 时的 `--parent-uri` 必须使用 `tree-nodes children` 返回的 URI，不能用 `task:///f{numericId}` 格式
 - `task create --type common-dts-batch` 创建 DTS 批处理任务，创建后可用 `task-draft update` 配置 reader/writer
 - `task create --type hive-clickhouse` 创建 Hive→ClickHouse DTS 任务（壳子在 server 端与 `common-dts-batch` 同形态，type 升级在 update-conf 阶段完成）；后续用 `task update-conf <taskId> --task-file <patch.json> --type 'hive->clickhouse'` 把顶层 `type` 升级为 `hive->clickhouse`，并写入 `conf.configuration.reader`（`type=hive`、`engineType=spark`、`sourceType=sql`、`query`、`columns[]`）和 `conf.configuration.writer`（`type=clickhouse`、`chClusterName`、`chDbName`、`chTableName`、`shardColumn`、`shardNum`、`partition`、`partitionTypes`、`columns[]`）
+- `task create --type common-dts-stream` 创建 DTS 流式任务壳子（`typeGroup=type=common-dts-stream`，与 batch 的 `common-dts-batch` 相对，适用于 bmq->hive 等流式同步）；该类任务走 `POST /realtime/create?projectId=<id>` 接口，不能用 batch 的 `/task/create`（后端会报“当前操作不支持流任务”），创建后用 `task update-conf` 配置 reader/writer
 - `task update-conf --type <type>` 可选地覆盖 batch / DTS 草稿顶层 `type`，专为“先用通用壳子创建、再升级到具体 DTS 子类型”的场景设计；realtime stream draft 不支持这个覆盖，不设置时保留 server 上现有 `type`
 - `task-draft update` 支持更新队列、集群、调度时间、SQL 代码、任务依赖、跨区域查询配置、DTS 读写配置等
 - `task-draft update` 支持小时调度字段；日调度可继续传 `--schedule-time 00:00`，小时调度请按页面原始值传 `--schedule-time <minute>` 与 `--schedule-day <value>`（例如 `--schedule-time 5 --schedule-day 16`）
@@ -739,7 +765,12 @@ If the built-in region list does not cover the target IDC/region, prefer adding 
 - `task-draft explain` 会按任务类型分流：`type=hsql` 走 Dorado `resource/explain`，校验 HSQL 草稿或线上版本语法；`type=stream_sql` 走 `realtime/sqlCheck/{taskId}`，校验目标版本的完整实时 SQL 配置；支持 `--online` / `--version <n>` 校验指定发布版本配置
 - `task-draft explain` 的 `${DATE}` / `${date}` / `${date-1}` 替换、`--template-var k=v` 与 `--auto-strip-mustache` 仅用于 HSQL 分支；`stream_sql` 分支直接提交目标版本的完整 `conf` 给后端校验
 - `task-draft explain` 不适用于 DTS；如果任务是 DTS，请改用 `dts-draft explain`
-- `task update-conf` 支持直接保存 stream 类实时任务（包括 `kafka2clickhouse`）的抓包 `conf`；当任务 `conf.typeGroup=stream` 或 `type` 形如 `stream_channel_*` 时，CLI 会自动走 `POST /realtime/{taskId}/draft`，并保留原始顶层 `conf.typeGroup`
+- `task update-conf` 支持直接保存 stream 类实时任务（包括 `kafka2clickhouse`、`common-dts-stream` 的 bmq->hive）的抓包 `conf`；当任务 `conf.typeGroup=stream` 或 `type` 形如 `stream_channel_*` 时，CLI 会自动走 `POST /realtime/{taskId}/draft`，并保留原始顶层 `conf.typeGroup`
+- 保存 DTS 流式任务（common-dts-stream）草稿时，可用 `task update-conf` 的 `--queue`/`--cluster`/`--dc`/`--priority`/`--engine-id`/`--enable-failover`/`--owner` 指定运行位置；这些字段只会附加到 realtime 草稿 body（不传则维持最小 body，避免影响 kafka2clickhouse 仅改运行参数的保存）。运行队列建议先用 `project yarn-queues --task-type common-dts-stream` 找到资源最空的流式队列
+- **DTS 流式任务（bmq->hive）端到端保存方案**：用 `task create --type common-dts-stream` 建壳子后，按下面三步组装 `conf` 再 `task update-conf` 保存。Agent 在用户只给出 bmq 源信息时，应主动补齐 hive 表、队列与资源配置，不要直接用空/默认值保存：
+  1. **缺少 hive 目标表时，提醒用户提供，不要尝试根据 bmq 自动建表**：目前没有“直接根据 bmq topic 创建 hive 表”的能力——bmq topic 自身元数据（`bmq topic get`/`bmq topic list`）只有 qps/分区/owner/psm，**不含字段 schema**，无法据此推导出 hive 表结构。因此当用户未提供 writer 的 `databaseName`/`tableName` 时，应直接提醒用户提供已存在的 hive 目标表（库名+表名），不要自行猜测或新建。若用户已有目标表但缺字段映射，可用顶层 `hive` 命令（注意不是 `dorado hive`）查已存在表的字段：`bytedcli hive ddl <db> <table> --region <region>` 拿到 `CREATE TABLE` 字段与分区，再写入 `conf.configuration.writer.parameter`；reader 侧设 `fieldSyncMode:auto` + operator 设 `autoParseConnectors:true` 让平台对齐字段，但目标 hive 表必须由用户事先建好并真实存在
+  2. **队列必须显式带且要选充足的**：先 `dorado project yarn-queues --project-id <id> --task-type common-dts-stream --region <region>` 列出流式队列，再结合资源使用（Allocated Rate 越低、Free CPU/Free Memory 越多越充足）挑一个，保存时务必带齐 `--queue`/`--cluster`/`--dc`（三者要同属一个机房/集群）；缺队列会落到默认或无法部署
+  3. **资源配置（operator.parameter.commonConfig）按吞吐合理设置，不要照搬默认**：页面“资源设置”各项对应 `commonConfig` 字段——`TaskManager 个数=tmNum`、`单 TaskManager CPU 数=containerVcoresD`、`单 TaskManager 内存(MB)=tmMemoryMb`、`单 TaskManager slot 数=slotsPerTm`、`JobManager CPU 数=jmMemoryVcoresD`、`JobManager 内存=jmMemoryMb`、`启用智能资源=enableIntelligent`。默认 `tmNum=4 / containerVcoresD=4 / tmMemoryMb=4096 / slotsPerTm=4 / jmMemoryVcoresD=3 / jmMemoryMb=4096 / enableIntelligent=false` 适合中等吞吐；低吞吐 topic 可下调 `tmNum`（如 1~2）与单 TM 资源以省队列资源，高吞吐再上调 `tmNum`/`slotsPerTm`。`slotsPerTm` 一般与 `containerVcoresD` 对齐，`tmMemoryMb/slotsPerTm` 单 slot 内存不要过低。也可开 `enableIntelligent:true` 交由平台智能调度
 - `dts-draft explain` 使用 Dorado `resource/explain` 校验 DTS reader SQL（`conf.configuration.reader.parameter.query`），支持 `typeGroup=dts`、`typeGroup=common-dts-batch` 和 `typeGroup=hive->clickhouse`；如果 DTS reader 是 table 模式、没有 `reader.parameter.query`，命令返回 `status=not_applicable`，不是失败
 - `dts-draft explain` 同样支持 `--date`、`--template-var k=v`、`--online`、`--version <n>`；若任务详情无法推导 `dc` 或 `ownerUserName`，调用时需显式传 `--dc` / `--username`
 - `task-draft update --query-type` 设置查询类型（如 `FLEXIBLE_UNION`、`COMPLEX_QUERY`），写入 `conf.configuration.operator.parameter.queryType`
@@ -788,7 +819,7 @@ If the built-in region list does not cover the target IDC/region, prefer adding 
 - **`eu-compliance2`（IE2）**：控制台在 **`dataleap-ie2.tiktok-row.net`**，Dorado API 在 **`dataleap-gp-ttp-eu.tiktok-eu.net/dorado_tx_api`**（与 Hive `eu-compliance2` 同 API 主机）；CLI 请求带 **`Origin`/`Referer` = IE2 控制台**、`x-bcgw-vregion: ie2`。任务草稿里 `region`/`dc` 常为 `eu-ttp-gp` / `ie2`，与 CLI `-r eu-compliance2` 对应。
 - **IE2 鉴权分层**：`task`/`folder structure`/`task online` 等批处理 API 使用 sg 颁发的 Dataleap JWT（`bytedcli --site eu-ttp auth login`）。**`tree-nodes children`、`task advanced-search`、`node resolve-uid`、`folder create`（IDE）** 等走 `getIdeHeaders`：若 API 主机上已有 Dataleap session cookie 则向本区域 `/user/jwt` 换票，否则自动使用 **Titan**（`X-Titan-Token`，同样只需 `auth login`）。`auth login --session` 仅在需要区域 session cookie 换票时才有必要。
 - 若错误为 **`Failed to parse JSON`** 且预览里出现 **`Restrict Notice`**：多半是打到了 **`dataleap-ie2.../dorado_tx_api`** 而非 **`dataleap-gp-ttp-eu...`**；请使用含 IE2 主机拆分的构建后重试。
-- `gp-us` 使用 DataLeap 页面态 session cookie，首次使用前先执行 `bytedcli --site i18n-bd auth login --session`
+- `gp-us` 是 `uspipo` 的兼容别名，使用 DataLeap 页面态 session cookie，首次使用前先执行 `bytedcli --site i18n-bd auth login --session`
 
 ## References
 

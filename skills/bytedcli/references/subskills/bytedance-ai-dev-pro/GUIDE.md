@@ -52,7 +52,7 @@ curl -I -X GET 'https://cloud.bytedance.net/auth/api/v1/jwt' \
 export BYTEDCLI_SERVICE_ACCOUNT_JWT='<service-account-jwt>'
 ```
 
-JWT 有过期时间。如果 AFS 命令返回 `miss token`、token 过期或其他服务账号 JWT 鉴权失败信息，需要重新签发 JWT，并更新环境变量 `BYTEDCLI_SERVICE_ACCOUNT_JWT` 后再重试。
+JWT 有过期时间。如果 AFS 命令返回 `miss token`、token 过期或其他服务账号 JWT 鉴权失败信息，需要重新签发 JWT，并更新环境变量 `BYTEDCLI_SERVICE_ACCOUNT_JWT` 后再重试。 如仍遇到“服务账号未在 AFS 配置中”等其他鉴权错误时，去 ../../troubleshooting.md 按步骤排查。
 
 ## 命令发现
 

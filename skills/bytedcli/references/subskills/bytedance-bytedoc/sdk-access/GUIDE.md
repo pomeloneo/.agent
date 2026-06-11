@@ -16,7 +16,7 @@
 
 ## 核心流程
 
-- Go SDK 生成请求：确认 site 后，先用 `bytedoc search` 或 `sdk plan` resolver 确认 backend/vregion 唯一；唯一后后续命令显式携带已确认的 `--backend` 和必要的全局 `--vregion`。只有纯接入方案问题且不需要代码时，才可以省略 `--language go`。
+- SDK 生成请求：确认 site 后，先用 `bytedoc search` 或 `sdk plan` resolver 确认 backend/vregion 唯一；唯一后后续命令显式携带已确认的 `--backend` 和必要的全局 `--vregion`。需要代码时按用户语言传 `--language <go|python|java|nodejs|cpp>`（默认 `go`）；只有纯接入方案问题且不需要代码时，才可以省略 `--language`。
 - 对 `tce` 和 `faas`，如果用户已知业务运行网络，传 `--runtime-network boe|cn`；如果用户没有指定接入环境，使用 `--access-env auto`。
 - 如果已知是 `tce/faas` 但运行网络未知，且有调用方 TCE PSM，不要先问用户；传 `--caller-psm <caller-psm>`，让 CLI 检查 TCE / Keel 证据并填充 `runtimeNetwork`。
 - 明确的 BOE 服务证据映射到 `--runtime-network boe`，明确的 CN / online_cn / prod CN 证据映射到 `--runtime-network cn`；如果服务出现在多个环境且目标库网络已知，只把 CLI 的 `target-network-fallback` 作为证据展示。若仍需要用户决策，必须停止并询问，不把 fallback 当成可继续执行的猜测依据。
@@ -57,26 +57,27 @@
 - BOE Volc 从 CN TCE/FaaS 访问不支持，因为网络不可达。
 - 仅可视化访问使用 `visual-query`，不得触发 SDK 代码生成。
 
-## Go SDK 素材
+## SDK 素材（多语言）
 
-- 仅当 `sdk plan` 支持且 backend/vregion 已确认后，才调用 `bytedcli --json --site <site> --vregion <confirmed-vregion> bytedoc sdk generate --service <psm> --backend <confirmed-backend> --access-env <env> --runtime-network <boe|cn> --language go --collection <collection> --operation find-one`。
+- 仅当 `sdk plan` 支持且 backend/vregion 已确认后，才调用 `bytedcli --json --site <site> --vregion <confirmed-vregion> bytedoc sdk generate --service <psm> --backend <confirmed-backend> --access-env <env> --runtime-network <boe|cn> --language <go|python|java|nodejs|cpp> --collection <collection> --operation find-one`。
+- `--language` 支持 `go`、`python`、`java`、`nodejs`、`cpp`，默认 `go`；按用户使用的语言选择。
 - `local-mac`、`devbox` 和 `visual` 省略 `--runtime-network`；`tce` 和 `faas` 需要携带。
 - 将 `codeSamples[]` 视为给 coding agent 适配到业务仓库的素材。
-- 当用户要求 SDK 代码、Go 代码或代码素材时，最终答复先完整展开 `codeSamples[].content`，再总结依赖、环境变量或验证命令。
+- 当用户要求 SDK 代码或代码素材时，最终答复先完整展开 `codeSamples[].content`，再总结依赖、环境变量或验证命令。
 - 代码后必须包含“接入指导”段落。优先使用 `integrationGuidance[]`，再总结选定接入方式、运行网络假设、collection 占位/真实值、验证路径和下一步友好动作。
 - 即使答复还包含权限状态、授权 dry-run 输出、warning 或 SDK doctor 诊断，也不要省略“接入指导”。
 - 如果 `BYTEDOC_COLLECTION` 仍是占位值，不要只输出 CLI 命令；需要说明“如果不知道 collection 名，可以让我继续帮你查询一下”。
 - 如果用户要求真实可运行代码但未提供 collection，先询问 collection，不能猜业务集合名。
-- 生成的 Go 代码必须使用 ByteDoc 官方 driver `code.byted.org/bytedoc/mongo-go-driver`，不要直接使用 upstream `go.mongodb.org/mongo-driver` module。
+- 生成代码使用对应语言的 ByteDoc 官方 driver：Go 用 `code.byted.org/bytedoc/mongo-go-driver`、Python 用 `bytedpymongo`、Java 用 `com.bytedance.bytedoc:mongo-java-driver`、Node.js 用 `@byted/bytedmongodb`、C++ 用 blade `bytedoc/mongo-cxx-driver`；不要使用 upstream MongoDB driver（如 `go.mongodb.org/mongo-driver`）。
 - 阅读并应用 `sdk generate` 返回的 `relatedGuides[]`；这些 guide 指向 ByteDoc 适配过的 MongoDB 官方 skill 指南。
 - 不要从 bytedcli 把生成代码写入用户仓库。
-- 保留质量要求：复用 `mongo.Client`，使用 `context.WithTimeout`，不要记录 token 或完整 URI，除非用户明确要求，否则避免写操作。
+- 保留质量要求：复用 client 实例（Go `mongo.Client` / Node `MongoClient` / C++ `mongocxx::pool` 等），在语言支持范围内设置连接/查询超时，不要记录 token 或完整 URI。默认生成完整 CRUD 示例，写操作仅作演示，生产前替换为有边界的过滤条件。
 
 ## 授权检查位置
 
 - 将 PSM 授权视为运行时就绪检查，而不是生成 SDK 代码素材的阻断条件。
 - 如果用户同时提供调用方 PSM 和目标 ByteDoc PSM，且接入矩阵支持，先完成 `sdk plan` 和 `sdk generate`。
-- 代码素材之后，再执行或推荐 `bytedoc access` 流程检查授权：先 `access role list`，再 `access permission get`，只有授权缺失且用户希望继续协助申请时，才进入 `access psm create` dry-run。
+- 代码素材之后，再执行或推荐 `bytedoc access` 流程检查授权：classic / cloud-native 先 `access role list`，再 `access permission get`；Volc 直接用 `access psm list --backend volc --account <caller.psm>`。只有授权缺失且用户希望继续协助申请时，才进入对应 dry-run。
 - 如果已经授权，说明当前权限并继续给验证命令。
 - 如果授权缺失，不要用授权 warning 替代生成代码；在末尾追加“权限状态”段落，询问是否继续协助申请授权。
 - 授权 dry-run 可以主动执行，但真实提交必须获得用户明确确认。确认后由 Agent 自己遵循 CLI 确认协议；不要让用户复制隐藏 live-submit 命令。

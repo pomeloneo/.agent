@@ -2,6 +2,7 @@
 
 Generated path index for mirrored domain guides. Use [`references/command-surface.md`](command-surface.md) for routing.
 
+- [`bits-code-guard`](references/subskills/bits-code-guard/GUIDE.md)
 - [`bytedance-abase`](references/subskills/bytedance-abase/GUIDE.md)
 - [`bytedance-ad-admin`](references/subskills/bytedance-ad-admin/GUIDE.md)
 - [`bytedance-aeolus`](references/subskills/bytedance-aeolus/GUIDE.md)
@@ -86,6 +87,7 @@ Generated path index for mirrored domain guides. Use [`references/command-surfac
 - [`bytedance-kmsv2`](references/subskills/bytedance-kmsv2/GUIDE.md)
 - [`bytedance-kross`](references/subskills/bytedance-kross/GUIDE.md)
 - [`bytedance-kylin`](references/subskills/bytedance-kylin/GUIDE.md)
+- [`bytedance-lagrange`](references/subskills/bytedance-lagrange/GUIDE.md)
 - [`bytedance-lark`](references/subskills/bytedance-lark/GUIDE.md)
 - [`bytedance-lark-devops`](references/subskills/bytedance-lark-devops/GUIDE.md)
 - [`bytedance-lark-gateway`](references/subskills/bytedance-lark-gateway/GUIDE.md)
@@ -104,6 +106,7 @@ Generated path index for mirrored domain guides. Use [`references/command-surfac
 - [`bytedance-mock`](references/subskills/bytedance-mock/GUIDE.md)
 - [`bytedance-moss`](references/subskills/bytedance-moss/GUIDE.md)
 - [`bytedance-mq-test`](references/subskills/bytedance-mq-test/GUIDE.md)
+- [`bytedance-nac`](references/subskills/bytedance-nac/GUIDE.md)
 - [`bytedance-neptune`](references/subskills/bytedance-neptune/GUIDE.md)
 - [`bytedance-netlink`](references/subskills/bytedance-netlink/GUIDE.md)
 - [`bytedance-nexde`](references/subskills/bytedance-nexde/GUIDE.md)
@@ -123,11 +126,13 @@ Generated path index for mirrored domain guides. Use [`references/command-surfac
 - [`bytedance-safe-digital-employee`](references/subskills/bytedance-safe-digital-employee/GUIDE.md)
 - [`bytedance-safe-disposal`](references/subskills/bytedance-safe-disposal/GUIDE.md)
 - [`bytedance-safe-eva`](references/subskills/bytedance-safe-eva/GUIDE.md)
+- [`bytedance-safe-hawk`](references/subskills/bytedance-safe-hawk/GUIDE.md)
 - [`bytedance-safe-hawkpro`](references/subskills/bytedance-safe-hawkpro/GUIDE.md)
 - [`bytedance-safe-octp`](references/subskills/bytedance-safe-octp/GUIDE.md)
 - [`bytedance-safe-puzzle`](references/subskills/bytedance-safe-puzzle/GUIDE.md)
 - [`bytedance-safe-safemind`](references/subskills/bytedance-safe-safemind/GUIDE.md)
 - [`bytedance-safe-sample`](references/subskills/bytedance-safe-sample/GUIDE.md)
+- [`bytedance-safe-sparkinnovation`](references/subskills/bytedance-safe-sparkinnovation/GUIDE.md)
 - [`bytedance-safe-tcs`](references/subskills/bytedance-safe-tcs/GUIDE.md)
 - [`bytedance-safe-tcs-project-switch`](references/subskills/bytedance-safe-tcs-project-switch/GUIDE.md)
 - [`bytedance-scm`](references/subskills/bytedance-scm/GUIDE.md)

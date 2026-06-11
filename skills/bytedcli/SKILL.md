@@ -1,6 +1,6 @@
 ---
 name: bytedcli
-description: "Unified skill for the bytedcli command surface. Use when tasks involve ByteDance internal R&D platforms and the agent should prefer bytedcli through CLI, MCP, or bundled references instead of opening web pages or hand-writing internal API calls. Covers auth/tokens; insearch internal knowledge and authenticated internal GET; Feishu/Lark, Jinshu, Cloud Docs/Ticket/Kani, Lark Oncall; FundEye/Fullink/TCheck; Codebase, BAM, BITS, Devflow, SCM, AGW, Janus/Janus Mini, Luban npm search and PyPI artifact publishing, Lynx, Overpass, Goofy; Fornax, Helix, Meego, AIME, Tika, Starling, TikTok Gecko, Holmes, Byterec; Live Trace; TCE/TCC/Spark Platform/ByteFlow/ENV/ByteCopy/TOS/FaaS/TAE/Volcano/ByteCloud/Bytetree/Netlink/Neptune/Settings/Kross; BMT, ABase, RDS, ByteHouse, ByteDoc, Merlin, Hive, Dorado, Blade, Oceanus, Aeolus, DataQ, TQS, Forge, ES, Cache, BMQ/RMQ/EventBus; Cronjob, Log, APM, Slardar, Codecov, Archer; DKMS, KMS v2, IAM; ByteStable WCC; TestIDE/SmartQ; MCP startup and update flows."
+description: "Unified skill for bytedcli command surface. Use for ByteDance internal R&D and platform tasks where the agent should prefer bytedcli CLI, MCP, or bundled references over web UI or hand-written internal API calls. Covers auth/JWT, internal search/GET, Lark/Feishu collaboration, Codebase/MR/CI, Devflow, SCM, Lagrange Torch release and ICM images, cloud/runtime services, data/SQL platforms, observability, security/IAM/KMS, AI/dev tools, package and artifact lookup/publish, and skill/plugin/MCP startup and update flows."
 ---
 
 # bytedcli
@@ -53,10 +53,15 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
   - 例子：“帮我登录”“看当前账号”“拿 codebase jwt”
 - 仓库、MR、Issue、Review、CI、文件、跨仓搜索：`codebase`
   - 例子：“看这个 MR”“给这个 MR 回复评论”“查这个仓库的 CI”
+- 代码审查 / code review：`bits-code-guard`（完整评审 skill）、`code-review`（拉取仓库自定义审查规则 / 工作流的 CLI 命令）
+  - 例子：“review 这个 MR 的代码”“CR 一下我这次改动”“帮我看看这段有没有 bug”
+  - 查某个仓库绑定的自定义审查规则 / 工作流用 `bytedcli code-review rule list --repo group/project` / `bytedcli code-review workflow list --repo group/project`（`--repo` 也接受 code.byted.org 的 SSH/HTTPS remote URL，或在仓库目录内自动推断）
 - 研发任务管理（创建发布任务、查看任务详情与部署状态、搜索任务列表、查询项目与需求）：`devflow`
   - 例子：”创建一个发布任务””查这个 devflow 任务详情””搜我的发布任务””查这个空间有哪些项目””查项目下有哪些需求”
 - ByteFlow 工作流引擎、应用/状态机/revision 查询、workflow JSON/ASL 校验与安全写操作辅助：`bytedance-byteflow`
   - 例子：“查 ByteFlow app/状态机”“校验这个 workflow JSON”“创建或更新 ByteFlow revision”
+- Lagrange Admin Torch 版本发版、ICM 镜像发布、构建历史页同款 payload、cpu/cuda/mlu Torch 版本选择、use cache / skip arm / ICM rebuild 等高级选项：`lagrange torch`
+  - 例子：“发一个 lg-admin Torch DEV build”→ `lagrange torch release scm build`；“发布对应 ICM 镜像”→ `lagrange torch release icm build`
 - Feishu / Lark 文档、评论、日历、待办、消息、表格、多维表格：`feishu`
   - 例子：“读这个 Lark 文档”“在文档里追加一段”“给某人发飞书消息”
 - People 自助请假记录查询与半天假申请：`people`
@@ -166,6 +171,7 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 任务已经收敛到某个具体领域时，继续看对应领域说明：
 
 - Codebase: [references/subskills/bytedance-codebase/GUIDE.md](references/subskills/bytedance-codebase/GUIDE.md)
+- Code Review（代码审查）: [references/subskills/bits-code-guard/GUIDE.md](references/subskills/bits-code-guard/GUIDE.md)
 - Feishu: [references/subskills/bytedance-feishu/GUIDE.md](references/subskills/bytedance-feishu/GUIDE.md)
 - Jinshu: [references/subskills/bytedance-jinshu/GUIDE.md](references/subskills/bytedance-jinshu/GUIDE.md)
 - Lark Oncall: [references/subskills/bytedance-lark-oncall/GUIDE.md](references/subskills/bytedance-lark-oncall/GUIDE.md)
@@ -188,6 +194,7 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - RDS: [references/subskills/bytedance-rds/GUIDE.md](references/subskills/bytedance-rds/GUIDE.md)
 - ByteHouse: [references/subskills/bytedance-bytehouse/GUIDE.md](references/subskills/bytedance-bytehouse/GUIDE.md)
 - ByteFlow: [references/subskills/bytedance-byteflow/GUIDE.md](references/subskills/bytedance-byteflow/GUIDE.md)
+- Lagrange: [references/subskills/bytedance-lagrange/GUIDE.md](references/subskills/bytedance-lagrange/GUIDE.md)
 - Blade: [references/subskills/bytedance-blade/GUIDE.md](references/subskills/bytedance-blade/GUIDE.md)
 - OneService: [references/subskills/bytedance-oneservice/GUIDE.md](references/subskills/bytedance-oneservice/GUIDE.md)
 - Merlin: [references/subskills/bytedance-merlin/GUIDE.md](references/subskills/bytedance-merlin/GUIDE.md)
