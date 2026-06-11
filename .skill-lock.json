@@ -315,7 +315,116 @@
       "skillFolderHash": "",
       "installedAt": "2026-06-05T07:40:23.197Z",
       "updatedAt": "2026-06-05T07:40:23.197Z"
+    },
+    "rax-cli": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-cli/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.727Z",
+      "updatedAt": "2026-06-11T06:59:17.727Z"
+    },
+    "rax-data-query": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-data-query/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.729Z",
+      "updatedAt": "2026-06-11T06:59:17.729Z"
+    },
+    "rax-device": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-device/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.730Z",
+      "updatedAt": "2026-06-11T06:59:17.730Z"
+    },
+    "rax-lynx-debugger": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-lynx-debugger/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.731Z",
+      "updatedAt": "2026-06-11T06:59:17.731Z"
+    },
+    "rax-network": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-network/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.733Z",
+      "updatedAt": "2026-06-11T06:59:17.733Z"
+    },
+    "rax-share-api": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-share-api/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.734Z",
+      "updatedAt": "2026-06-11T06:59:17.734Z"
+    },
+    "rax-share-fetch": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-share-fetch/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.735Z",
+      "updatedAt": "2026-06-11T06:59:17.735Z"
+    },
+    "rax-ui-inspector": {
+      "source": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "sourceType": "codebase",
+      "sourceUrl": "git@code.byted.org:i18n_ecom/rax-skills.git",
+      "skillPath": "skills/rax-ui-inspector/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:17.736Z",
+      "updatedAt": "2026-06-11T06:59:17.736Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-06-11T06:59:28.589Z",
+      "updatedAt": "2026-06-11T06:59:28.589Z"
     }
   },
-  "dismissed": {}
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "firebender",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "warp",
+    "trae",
+    "trae-solo",
+    "trae-cn",
+    "trae-cli",
+    "coco"
+  ],
+  "knownDefaultAgents": [
+    "trae",
+    "trae-solo",
+    "trae-cn",
+    "trae-cli",
+    "coco"
+  ]
 }
