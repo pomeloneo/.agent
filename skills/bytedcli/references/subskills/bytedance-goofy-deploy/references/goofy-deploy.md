@@ -19,6 +19,8 @@ bytedcli goofy preview remove --preview-id <preview_id>
 bytedcli goofy preview dashboard
 ```
 
+自动识别目录结构（`deploy.yml` / Next.js / 静态站点 / 构建产物），详见 `preview-directory.md`。
+
 ---
 
 ## Normal Project Deploy / 普通项目部署

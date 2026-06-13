@@ -165,6 +165,7 @@ bytedcli bits develop create \
   --change "service=DemoOrg|demo/web-app,branch=fix/share-button" \
   --change "service=DemoOrg|demo/admin-app,branch=fix/share-align" \
   --lane test \
+  --space-id 1234567890 \
   --from-dev-id 12345 \
   --qa "qa@bytedance.com" \
   --meego "https://example.com/issues/123" \
@@ -1197,6 +1198,7 @@ bytedcli bits anywhere black-path get --app-id 1234
 - `--service-type` 支持：`PROJECT_TYPE_WEB`、`PROJECT_TYPE_TCE`、`PROJECT_TYPE_FAAS`、`PROJECT_TYPE_HYBRID`、`PROJECT_TYPE_CRONJOB`、`PROJECT_TYPE_CUSTOM`；传入后会按对应项目类型自动解析 `projectUniqueId`
 - `--change` 支持可选的 `scm=<name>` 键，用于指定非主 SCM 依赖；省略时默认绑定主 SCM（`isMain === true`），行为与之前一致
 - `--change` 支持可选的 `mr=<iid>` 键（仅 `develop create` 生效），用于复用 source branch 上已存在的 open MR——等价于 Bits Web UI 提示 "An unfinished MR already exists" 时点击 "use directly"；省略时（默认）由 Bits 后端自动开新 MR，行为与之前一致；`mr=` 必须是正整数
+- `develop create` 使用多个 `--change` 且服务分属不同模板时，必须传 `--space-id` 以便跨模板解析项目；否则只会从首个匹配模板中取项目，未覆盖的服务将报错
 - `pipelines set` 是整体替换（PUT 语义），调用方必须基于 `pipelines get` 拿到的最新 DSL 改后再写回；命令 PUT 之前会自动把当前 DSL 备份到 `os.tmpdir()/bytedcli/bits-pipeline-backup/<id>-<ts>.json`
 - `pipelines set` 会在 PUT 前把所有空 i18n 字段（`{value: "", lang?, texts?}` 的 `StringInMultiLang`）置为 `null`，因为 BITS 校验器会拒绝 `value` 为空字符串但 GET 接口又会返回这种 sentinel 值；被剥的路径列在 `data.sanitizedI18nPaths`，最常见的是 `varGroup.description`
 - `pipelines set` 的版本字段是 `pipelineVersion.version`（一个 wrapper 对象），不是裸数字；CLI 已经做了 unwrap，正常情况下 `data.fromVersion / data.toVersion` 应该连续递增

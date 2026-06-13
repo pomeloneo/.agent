@@ -1,6 +1,6 @@
 ---
 name: bytedance-holmes
-description: "Manage Holmes TrustPress tasks, TrustData SQL queries, TrustData sql-submit --wait result polling, TrustData annotation/table registration follow-up, ByteCore C++ coredump analysis, and code-review ticket info via bytedcli. Invoke when tasks mention TrustPress、TikDiff、压测任务、Holmes、trust-press、tanker ID、创建压测、查可用 pod、压测结果查询、TrustData、数据质量、SQL 查询、trust-data、sql-submit --wait、result polling、annotation_required、table_register_required、table registration、注册表、ByteCore、coredump、崩溃分析、crash dump、SIGSEGV、frames_hash_id、code-review、ticket-detail、Change Type、MR Checks."
+description: "Manage Holmes TrustPress tasks, TrustData SQL queries, TrustData sql-submit --wait result polling, TrustData annotation/table registration follow-up, TikTok Debug video detail/batch info and covers and cross-business-line access via --business (default '0'), ByteCore C++ coredump analysis, and code-review ticket info via bytedcli. Invoke when tasks mention TrustPress、TikDiff、压测任务、Holmes、trust-press、tanker ID、创建压测、查可用 pod、压测结果查询、TikTok Debug、video detail、video batch、item_id、video_ids、封面图、TrustData、数据质量、SQL 查询、trust-data、sql-submit --wait、result polling、annotation_required、table_register_required、table registration、注册表、ByteCore、coredump、崩溃分析、crash dump、SIGSEGV、frames_hash_id、code-review、ticket-detail、Change Type、MR Checks."
 ---
 
 # bytedcli Holmes
@@ -69,6 +69,19 @@ bytedcli --site i18n auth login --session --session-method interactive-browser
 
 - **C++ coredump 聚合查询**（`holmes bytecore search --psm <psm>`）：当线上出现崩溃（SIGSEGV / OOM / 其它 signal）时，按 `frames_hash_id` 聚合同类崩溃，查看各独立签名的发生次数、涉及的 version / idc / cluster / env、崩溃调用栈、LLM 归因结论。支持按 `--env / --cluster / --version / --idc / --zone / --signum / --reason` 等维度过滤，`--with-frames` 可带回完整调用栈。需要 BDSSO session（首次使用先 `bytedcli auth login --session`）。
 
+### TikTok Debug Video
+
+- **视频详情**（`holmes video get`）：给 item id 或 Holmes detail URL，获取 TikTok Debug 页面里的基础视频信息、作者信息、统计、封面 URL、media URL。默认调用 `video_profile_v2` 和 `video_server_data`；需要页面 Index Service tab 的 Push 数据时加 `--include-index-service`。
+- **批量视频卡片**（`holmes video list`）：给 item id 列表、batch 页面 `video_ids` 短 id，或 Holmes batch URL，按页面同款链路解码/检测/批量拉取 simple info、profile、server data，并汇总封面 URL 和基础信息。
+- **封面下载**：detail 和 batch 都支持 `--cover-dir <dir>`，把能下载的封面写入本地目录；JSON 输出里读取 `cover_downloads[]` 和每条 item 的 `cover_file`。
+- **Agent 处理建议**：需要稳定解析时使用 `--json`；如需排查原始字段再加 `--include-raw`。batch 页面可能包含非数字 `OGV...` 类 id，CLI 会标记为 `skipped_item_ids`，不让它们拖垮整批 profile 请求。
+
+#### Constants & Defaults
+
+- **DEFAULT_BUSINESS**: `"0"` — HTTP `business` header value sent on every Holmes video API call (both get and batch). Advanced users on non-default business lines override with `--business <value>`.
+- **DEFAULT_REGION**: `"SG"` — default region used only by `video get --include-index-service` to set the legacy `index_service` dc query parameter. `profile` and `server_data` endpoints do not consume region.
+- **DEFAULT_BATCH_CHUNK_SIZE**: `30` — number of items per `video_profile_v2` / `video_server_data` / `batchGetVideoSimpleInfo` batch request. On transient errors, each collector automatically falls back to chunkSize=1 (single-item) retry to isolate the failing item.
+
 ### TrustData
 
 - **数据质量查询与 SQL 执行**（`holmes trust-data sql-submit`）：向 TrustData 提交 ClickHouse 或 Hive SQL 查询，TrustData API 默认走 i18n Holmes 后端，输出可直接打开的 i18n TrustData 控制台 URL。支持 `--sql` 直接传 SQL 或 `--sql-file` 从文件读取（避免 shell 转义问题）。CLI 会从 SQL 的 `FROM`/`JOIN` 中识别完整表名（如 `db.table`），先调用 i18n `get_table_info` 查询活跃表元数据并自动确定 `region`；如果只命中一个活跃 region，会自动带该 region 提交。`--region` 可手动覆盖自动检测。CLI 不要求用户传 `--repo-id` 或 `--data-source-type`；后端会以 BytedCLI platform 识别请求，并在缺省 repo_id 时自动创建/关联 CLI 查询使用的 repo。
@@ -127,6 +140,54 @@ bytedcli --json --site i18n holmes tikdiff get --task-id 2503983 # for RoW Holme
 ```
 
 > **要诊断 / 重跑 Libra 实验评审里的 TikDiff Test 子任务？** 那是另一组命令，挂在 libra skill 下：`bytedcli libra experiment tikdiff-status` / `tikdiff-rerun`。它们走 Holmes 给 Libra iframe 暴露的 `/api/v1/tikdiff/libra/*` bridge（与本节的通用 `holmes tikdiff create/get` 互补），鉴权用 Titan Passport cookie 而非 BDSSO。详见 `bytedance-libra` skill。
+
+### TikTok Debug Video
+
+```bash
+# 按 item id 获取详情；需要 Index Service Push 时加 --include-index-service
+bytedcli --json holmes video get --item-id <item_id> --region SG --include-index-service
+
+# 直接传 Holmes detail 页面 URL
+bytedcli --json holmes video get \
+  --url 'https://holmes.tiktok-row.net/tiktok-debug/tiktok/video/detail?item_id=<item_id>&region=SG'
+
+# 下载单条视频封面
+bytedcli holmes video get --item-id <item_id> --region SG --cover-dir ./covers
+
+# 非默认业务线；--business 作为 HTTP header 发送到每个 API
+bytedcli --json holmes video get --item-id <item_id> --business "1"
+
+# 只拿 profile，跳过 server_data（更快、字段更少、用于定位缺字段问题）
+bytedcli --json holmes video get --item-id <item_id> --no-server-data
+
+# 按 item id 列表批量获取基础信息和封面
+bytedcli --json holmes video list --item-ids <item_id_1>,<item_id_2> --cover-dir ./covers
+
+# 按 Holmes batch 页面 URL 获取；CLI 会先解 video_ids 短 id，--model 存到输出 metadata
+bytedcli --json holmes video list \
+  --url 'https://holmes.tiktok-row.net/tiktok-debug/tiktok/video/batch?model=Default&video_ids=<short_id>'
+
+# 非默认业务线（batch 同样支持 --business）
+bytedcli --json holmes video list --item-ids <id1>,<id2> --business "1"
+
+# 传 model 名（仅 metadata，写入 data.source.model，不影响 API 请求）
+bytedcli --json holmes video list --video-ids <short_id> --model Default
+```
+
+**video get 关键参数**：
+- `--region <region>`：仅在 `--include-index-service` 时生效，控制旧版 `index_service` 的 dc 查询参数。默认 `SG`。
+- `--business <value>`：每次调用都发送的 HTTP `business` header，默认 `"0"`。高级用户在非默认业务线时传对应值。
+- `--no-server-data`：跳过 `video_server_data` 采集器；适合只看 profile 字段、或排查 server_data 缺字段、或追求最快返回的场景。默认会调用 `video_server_data`；传此 flag 跳过该采集器。
+
+**video list 关键参数**：
+- `--business <value>`：同 get，默认 `"0"`，每次 API 调用携带的业务线 header。
+- `--model <model>`：**仅用于 batch** 的元数据 flag。从 batch URL 解析或手动传入，写入 `data.source.model`；对 API 请求本身没有任何影响（purely provenance）。
+- `--no-server-data`：跳过 `video_server_data` 采集器（与 get 语义一致）。
+- `--chunk-size <n>`：**仅用于 batch**，每批 `video_profile_v2` / `video_server_data` / `batchGetVideoSimpleInfo` 发送的 item 数，默认 30。遇到瞬时失败时（如 i/o timeout code=2），三个 collector 都会降级到 chunkSize=1 逐个重试，以定位具体出错 item。
+
+**Output shapes（--include-raw）**：`--include-raw` 会在 JSON 输出的 `data.raw` 中保留各端点原始响应片段，具体结构如下：
+- `video get`：`data.raw = { profile_item: {...}, server_data_item: {...}, index_service: {...} }` — 分别来自 `video_profile_v2`、`video_server_data` 和（开启 `--include-index-service` 时）`index_service` 的单条 item 原始响应。
+- `video list`：`data.raw = { detect: {...}, simple_info: [...chunk fragments], profile: [...chunk fragments], server_data: [...chunk fragments] }` — `detect` 来自 tools/detect，其余三个字段均为 chunk 级原始响应数组（包含每批 30 条为单位的完整 envelope），可用于逐字段溯源。
 
 ### ByteCore
 
@@ -209,6 +270,12 @@ bytedcli holmes code-review update --ticket-id 76617 --rm-url https://cloud-ttp-
 - `pod list` 默认只显示空闲 pod，`--all` 显示全部。
 - `code-review get` 接受 GitLab MR URL 或 Holmes ticket-detail URL，也可改用 `--repo <group/project> --mr-id <n>`；默认同时拉 `/openapi/mr_ticket_meta_status`（header）+ `/ticket/{id}/check_info`(checks)，加 `--no-include-checks` 只拉 header；JSON 模式里 `check_summary.by_status` 是状态计数,`check_summary.blocking_failures` 是 block=true 且 status 为 failed/error/timeout 的列表,`check_groups[].checks[]` 保留每条 check 的原始字段。
 - `code-review update` 是 PATCH 操作（`PATCH /api/v3/code_review/ticket/<ticketId>`），对应 web 上「编辑 ticket」面板。Selector 三选一：`--ticket-id <id>`、`--url <mr_or_holmes_url>`、`--repo <path> --mr-id <n>`；至少要传一个可改字段（`--change-type` / `--idcs` / `--global-inconsistent-reason` / `--rm-url` / `--related-mr` / `--related-release` / `--check-input`）。`--idcs` 用逗号分隔（例 `ttp` 或 `i18n,ttp,i18n_sg,i18n_va,i18n_gcp`）；`--check-input <json>` 是兜底入口，传任意 JSON 对象覆盖 `check_input` 子树。`--change-type` 取值见 `holmes code-review enums`。
+- `holmes video get` 的 `--url` 会读取 detail 页面 URL 中的 `item_id` 和 `region`。`--include-index-service` 会额外调用旧版 `/api/debug/index_service?gid=<item_id>&region=<region>`，用于拿页面 Index Service / Push 数据。
+- `holmes video list` 的 selector 三选一：`--item-ids <ids>`、`--video-ids <short_id>`、`--url <batch_url>`。`--video-ids`/`--url` 会先调用 Holmes short-str 解码，再批量请求 simple info、profile 和 server data。`--chunk-size` 可控制每批 item 数。
+- `holmes video get|list --cover-dir <dir>` 会下载 `cover_image_url` 指向的封面；失败项写入 `cover_downloads[].error`，不会中断其他 item。batch 中非数字 id 会进入 `skipped_item_ids`。
+- **OGV / 非数字 ID 过滤**：batch 输入中，带 `OGV...` 前缀或长度不足 8 位的非纯数字 ID（例如 `OGV1234567890123`、`abc`）会在进入任何 profile 调用之前被过滤掉，计入 `counts.skipped`，避免它们导致整个 chunk 返回 HTTP 400。例如 `--item-ids 7350000000000000000,OGV1234567890123,short` — 后两项会被跳过，只有第一项参与后续请求。
+- **hiding_status-only profile 响应**：当某个 item 的 `video_profile_v2` 返回 `data: {id, hiding_status}`（仅有 hiding_status，没有其他字段）时，CLI 将该 item 判定为 `profile_data` 阶段失败，计入 `counts.failures`，并附带描述性错误消息；原始响应仍可在 `--include-raw` 的 `profile` chunk 片段中查看。
+- **瞬时 i/o timeout code=2 隔离**：`video_server_data` chunk 请求偶尔会返回 code=2 且 message 形如 `"dial tcp ... i/o timeout"` 的瞬时错误。CLI 捕获到该类（及其他瞬时网络）错误后，会自动将整个 chunk 降级为 chunkSize=1 逐条重发，从而精准定位是哪一个 item 引发了后端超时；个别失败的 item 会计入 `counts.failures`（stage=`server_data`），其余正常返回的 item 不受影响。
 - TrustData API 默认走 i18n Holmes 后端，不需要额外传 `--site i18n`。`sql-submit` 参数说明：`--sql` 和 `--sql-file` 二选一，`--sql-file` 优先；CLI 请求体固定使用 BytedCLI platform，并默认让后端处理 `data_source_type` 与 repo 归属。`--repo-id` 和 `--data-source-type` 不是 submit 命令参数；缺省 repo_id 时，TrustData 后端会为 CLI 来源自动创建/关联 repo。CLI 会根据 SQL 中的 `FROM`/`JOIN` 完整表名调用 `get_table_info --active-only` 自动确定 region；多个活跃 region 时，交互式终端提示选择，JSON/非 TTY 模式返回 `HOLMES_TRUSTDATA_REGION_AMBIGUOUS`，需要显式传 `--region`。当候选 region 超过一个时，文本结果会展示本次实际使用的 selected region。`--region` 推荐取值：`us-ttp`、`eu-ttp`、`va`、`eu-ttp-no`、`us-ttp2`（兼容旧数字 1/2/3/4/5）。
 - TrustData `sql-submit` 对提交阶段的 `HTTP 502 Bad Gateway` 会自动做简单重试，最多重试 2 次；若仍失败，再把 502 错误返回给用户。
 - TrustData region fallback：当某个 region 的 `sql-submit` 已成功创建 task 但执行结果为 `failed`/`unknown`，Agent 必须停止并汇报 task_id、TrustData URL、已使用 region 与可选候选；不要自动尝试其他 region。只有用户明确要求继续，才可用另一个 `--region` 重跑同一 SQL。

@@ -1,6 +1,6 @@
 ---
 name: bytedance-cronjob
-description: "Operate ByteDance cronjob via bytedcli: list/get jobs, list records, list/get deploy & upgrade tickets, deploy jobs, rerun jobs, debug jobs, kill running task instances, find logs, view cluster resource/Argos info, and enable/disable a cronjob's scheduling (suspend/resume) or delete a cluster. Use when tasks mention cronjob, 定时任务, 任务调度, 发布, 升级版本, 补数, 重跑, 调试, 杀任务, kill, 停止实例, 工单, 发布单, 查日志, 集群, 开启定时任务, 关闭定时任务, 启用任务, 停用任务, 暂停调度, 恢复调度, 删除集群. 注意：开启/关闭（启用/停用）定时任务调度走 `cronjob cluster resume` / `cronjob cluster suspend`（开关在 cluster 的 suspend 字段上，cronjob 没有 job 级一键开关）。重要：当涉及查找日志时，必须优先确认任务所在的控制面 (Site) 环境，请务必参考 references/workflow-find-logs.md 流程。"
+description: "Operate ByteDance cronjob via bytedcli: list/get jobs, list records, list/get deploy & upgrade tickets, create clusters, deploy jobs, rerun jobs, debug jobs, kill running task instances, find logs, view cluster resource/Argos info, and enable/disable a cronjob's scheduling (suspend/resume) or delete a cluster. Use when tasks mention cronjob, 定时任务, 任务调度, 发布, 升级版本, 补数, 重跑, 调试, 杀任务, kill, 停止实例, 工单, 发布单, 查日志, 集群, 新建集群, 创建集群, 开启定时任务, 关闭定时任务, 启用任务, 停用任务, 暂停调度, 恢复调度, 删除集群. 注意：开启/关闭（启用/停用）定时任务调度走 `cronjob cluster resume` / `cronjob cluster suspend`（开关在 cluster 的 suspend 字段上，cronjob 没有 job 级一键开关）。重要：当涉及查找日志时，必须优先确认任务所在的控制面 (Site) 环境，请务必参考 references/workflow-find-logs.md 流程。"
 ---
 
 # Cronjob (bytedcli)
@@ -33,6 +33,7 @@ bytedcli <command> [options]
 - 对工单执行发布动作：deploy / cancel / retry-safety-check / approve (默认 dry-run，--yes 才真正提交)
 - 查看工单回滚信息 (rollback-info：能否回滚、目标版本/区域/集群)
 - 查看集群资源用量 (cluster resource：usage_cpu/usage_mem) 与 Argos 监控信息 (cluster argos)
+- 新建集群 (cluster create：提交 createCluster ticket，默认 dry-run、--yes 才提交)
 - 开启/关闭定时任务调度：`cluster suspend` 关闭（停用），`cluster resume` 开启（启用）；以及删除集群 (cluster delete)。默认 dry-run、--yes 才提交
 - 查询 Cronjob 发布单状态
 - 查找 Cronjob 任务日志 (含跨区域/I18n)
@@ -62,7 +63,7 @@ bytedcli <command> [options]
 # 列出 Cronjob 任务
 # 支持按关键词搜索，--type 默认为 my
 bytedcli cronjob list-jobs \
-  --type "my" --search "keyword" --page 1 --size 20
+  --type "my" --search "keyword" --page 1 --page-size 20
 
 # 获取 Cronjob 任务详情
 bytedcli cronjob get-job \
@@ -72,7 +73,7 @@ bytedcli cronjob get-job \
 # 必须指定 --cluster-id 或 --job-id 或 --psm 其中之一
 # 支持按 --status (Running/Succeeded/Failed) 和 --task-type (cron/rerun/debug) 筛选
 bytedcli cronjob list-job-records \
-  --cluster-id 12345 --status "Succeeded" --page 1 --size 20
+  --cluster-id 12345 --status "Succeeded" --page 1 --page-size 20
 
 # 获取 Cronjob 实例详情
 # instance-name 可以是完整的 task_name 或 rerun/debug 的前缀
@@ -94,7 +95,7 @@ bytedcli cronjob task kill \
 # deploy-job 是一个命令组，实际执行发布使用 deploy 子命令
 bytedcli cronjob deploy-job \
   deploy --job-id 12345 --psm "cronjob.demo" --cluster-ids "85243,85244" \
-  --scm-repo-id 507579 --scm-repo-name "demo/repo" --scm-repo-version "1.0.0.1"
+  --scm-repo-id 123456 --scm-repo-name "demo/repo" --scm-repo-version "1.0.0.1"
 
 # 查询发布单状态
 # 发布单状态查询使用 deploy-job status 子命令
@@ -126,6 +127,15 @@ bytedcli cronjob ticket rollback-info --ticket-id 30253713
 bytedcli cronjob cluster resource --cluster-id 12345   # usage_cpu / usage_mem
 bytedcli cronjob cluster argos --cluster-id 12345      # Argos 监控/看板链接
 
+# 新建集群（危险写，默认 dry-run，--yes 才提交）
+# 默认创建为 suspend=true，并补 ENABLE_STREAM_LOG / SEC_TOKEN_PATH；如需关闭自动补齐可加 --no-default-envs
+bytedcli cronjob cluster create \
+  --job-id 12345 --name default --zone Example-Zone \
+  --physical-cluster demo-physical --business-cluster demo-business \
+  --cpu 4 --mem 8192 --max-exec-time 300 \
+  --env CONF_ENV=prod-demo \
+  --repos-json '[{"id":123456,"name":"demo/repo","version":"1.0.0.1","description":"demo"}]'
+
 # 开启/关闭定时任务调度、删除集群（危险写，默认 dry-run，--yes 才提交）
 # 关闭/停用定时任务 = suspend；开启/启用定时任务 = resume（开关在 cluster 上）
 bytedcli cronjob cluster suspend --cluster-id 12345 --yes   # 关闭/停用定时任务调度
@@ -155,6 +165,7 @@ bytedcli cronjob list-zones
 - `ticket deploy/cancel/retry-safety-check/approve` 是危险写操作，**默认 dry-run**（只打印将发送的 `POST ticket/{id}/...` 请求，不实际调用）；确认无误后加 `--yes` 才真正提交，`--json` 下 `mode` 字段为 `dry_run` / `submitted`
 - `ticket rollback-info` 是只读命令（GET `ticket/{id}/rollback_info/`），返回 `can_rollback`、不可回滚原因、目标 SCM 版本/区域/集群
 - `cluster` 是一级命令组，`cluster resource --cluster-id` 看 CPU/MEM 用量（GET `cluster/{id}/resource/`），`cluster argos --cluster-id` 看 Argos 监控信息（GET `cluster/{id}/argos_info/`），均为只读
+- `cluster create` 是危险写：提交 `POST job/{job_id}/cluster/` 的 createCluster ticket。默认 dry-run（打印 site+URL+method+body），加 `--yes` 才真正提交；默认 `suspend=true`，并按前端创建页补 `ENABLE_STREAM_LOG=true` 与 `SEC_TOKEN_PATH=/etc/tce_dynamic/identity.token`，可用 `--no-default-envs` 关闭自动补齐
 - `cluster suspend/resume/delete` 是危险写：`suspend` = **关闭/停用定时任务在该集群上的调度**（PUT `cluster/{id}/` `{suspend:true}`），`resume` = **开启/启用调度**（`{suspend:false}`），`delete` 删除集群（DELETE `cluster/{id}/`）。均默认 dry-run（打印 site+URL+method+body），加 `--yes` 才真正提交
 - **开启/关闭（启用/停用）一个定时任务**：cronjob 没有 job 级一键开关，开关在 cluster 的 `suspend` 字段上——用 `cronjob cluster resume`（开）/ `cronjob cluster suspend`（关）。一个任务跑在多个 cluster 上时，逐个 cluster 操作；先用 `get-job` 拿到 cluster id
 

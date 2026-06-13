@@ -111,6 +111,7 @@ bytedcli log get-log-cluster "psm.name" --start "2026-02-02T08:00:00" --kv-filte
 
 - `search-psm-log`、`get-logid-log` rolling 模式（`--psm` 且未加 `--no-rolling`，或显式 `--rolling`）、`search-prod-instance-log`、`get-lane-instance-log` 的时间窗口超过 6h 时，会自动拆成多个不超过 6h 的时间片并串行请求。
 - 当 `search-psm-log`、`search-prod-instance-log`、`get-lane-instance-log` 的时间窗口超过 6h 且没有显式收窄条件（例如 `--keyword`、`--exclude`、`--kv-filter`、`--level`、`--idc`）时，CLI 会直接拒绝，避免长时间范围空查询。
+- `--site i18n-bd --vregion US-EastBD` 会路由到 `logservice-us-eastbd.byted.org`，用于查询 i18n-bd US-EastBD 区域日志。
 
 ## `log analysis performance` 完整结果 JSON 关键字段语义
 

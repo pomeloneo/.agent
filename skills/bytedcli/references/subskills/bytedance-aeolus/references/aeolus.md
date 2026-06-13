@@ -508,7 +508,7 @@ bytedcli aeolus query-editor query run [options]
 - `-r, --region <region>` — `cn` | `sg` | `va` | `euttp` | `mycis` | `mybd` | `sglark` | `usttpusts` | `usbd` (default `cn` if omitted)
 - `--sql <sql>` — Inline SQL
 - `--file <path>` — SQL from disk (if neither `--sql` nor `--file`, CLI may read SQL from the file record)
-- `--queue <name>` — **Hive (default):** YARN queue name in `yarn.queue`. **CH (`--engine ch`):** maps to `cluster_name` unless `--cluster-name` is set
+- `--queue <name>` — **Hive (default): required.** YARN queue name in `yarn.queue` (use `aeolus query-editor queues` to list). **CH (`--engine ch`):** maps to `cluster_name` unless `--cluster-name` is set
 - `--idc <idc>` — **Hive only:** IDC in `yarn.idc`
 - `--engine <engine>` — `hive` (default) or `ch` (ClickHouse runner: `/ch/task/run` instead of `/hive/task/run`)
 - `--cluster-name <name>` — **CH only:** overrides `cluster_name` in submit body (otherwise use `--queue`)
@@ -546,13 +546,23 @@ bytedcli aeolus query-editor query logs [options]
 
 **Options:** `-r/--region`, **`--engine`** (and optional `--cluster-name`, `--ch-region` for consistency with other QE commands). **Must match the engine used for submit.**
 
+### `aeolus query-editor query cancel`
+
+```bash
+bytedcli aeolus query-editor query cancel [options]
+```
+
+**Required:** `--task-id`
+
+**Options:** `-r/--region`, **`--engine`** (and optional `--cluster-name`, `--ch-region` for consistency with other QE commands). **Must match the engine used for submit**, otherwise the wrong `/hive/task/.../cancel` vs `/ch/task/.../cancel` path is used.
+
 ### `aeolus query-editor query one`
 
 Creates a temp folder + file, writes SQL, then runs `query run` with polling.
 
 **Required:** `--sql`
 
-**Options:** `-r/--region`, `--folder`, `--name`, `--queue`, `--idc`, `--timeout`, `--rows`, plus **`--engine`**, **`--cluster-name`**, **`--ch-region`** (forwarded to the internal `query run`).
+**Options:** `-r/--region`, `--folder`, `--name`, `--queue` (**Hive required**), `--idc`, `--timeout`, `--rows`, plus **`--engine`**, **`--cluster-name`**, **`--ch-region`** (forwarded to the internal `query run`).
 
 Both `query run` and `query one` now show the resolved region as `input -> normalized` in text mode, and include `inputRegion` / `normalizedRegion` in JSON output. Errors also carry the normalized region in `error.details`.
 
@@ -570,9 +580,12 @@ bytedcli aeolus query-editor query run -r va --engine ch \
 
 bytedcli aeolus query-editor query status -r va --engine ch \
   --task-id <taskId> --file-id <fileId> --folder-id <folderId>
+
+bytedcli aeolus query-editor query cancel -r va --engine ch \
+  --task-id <taskId>
 ```
 
-Other `query-editor` subcommands (`login`, `whoami`, `queues`, `datasources`, `folder`, `file`) are unchanged by `--engine`; only **`query run` / `status` / `logs` / `one`** accept engine flags.
+Other `query-editor` subcommands (`login`, `whoami`, `queues`, `datasources`, `folder`, `file`) are unchanged by `--engine`; only **`query run` / `status` / `logs` / `cancel` / `one`** accept engine flags.
 
 ### `aeolus query-editor login`
 

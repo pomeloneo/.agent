@@ -40,6 +40,8 @@ bytedcli <command> [options]
 
 Commands are grouped under `tce service`, `tce cluster`, `tce instance`, and `tce deployment`. Old flat names (e.g. `tce list-starred-service`, `tce search-service`, `tce get-service`, `tce list-service-clusters`, `tce list-instance`, `tce list-deployment`, `tce get-deployment`) still work as hidden aliases.
 
+> 在 ByteDance 生产网络内使用 `--site i18n-tt` 时，设置 `BYTEDCLI_NETWORK_PROFILE=prod`，TCE OpenAPI 与 ByteCloud JWT host 会自动切到生产网可达的 `cloud-i18n.bytedance.net`。
+
 ```bash
 # 列出支持的站点
 bytedcli tce list-sites

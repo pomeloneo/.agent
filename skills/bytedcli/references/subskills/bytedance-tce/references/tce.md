@@ -7,6 +7,8 @@
 bytedcli tce list-sites
 ```
 
+在 ByteDance 生产网络内使用 `--site i18n-tt` 时，设置 `BYTEDCLI_NETWORK_PROFILE=prod`，TCE OpenAPI 与 ByteCloud JWT host 会自动切到生产网可达的 `cloud-i18n.bytedance.net`。
+
 ## 服务查询
 
 ```bash

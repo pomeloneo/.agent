@@ -45,11 +45,13 @@ bytedcli <command> [options]
 ### Quick Preview / 快速预览部署
 把本地构建好的目录快速部署，并产生一个可访问的预览链接，可用于日常 Demo 演示，快速部署本地产物等场景。
 ``` bash
-# 部署 `.` 目录下的文件到快速预览环境
+# 部署项目根目录（自动检测 dist/build/out 构建产物）
 bytedcli goofy preview deploy . --alias demo-preview
 # 列出所有快速预览环境
 bytedcli goofy preview list --page 1 --page-size 20
 ```
+
+> 支持的目录类型与详细说明见 `references/preview-directory.md`。
 
 ### Normal Project Deploy / 普通项目部署
 对已有的正式 Goofy Deploy 项目进行搜索、查看、部署等。
@@ -136,7 +138,7 @@ bytedcli --site cn goofy deploy diagnose --deploy-id 24913395 --show-deployment-
 - 主入口：`goofy deploy *` / `goofy preview *`
 - 可用别名：`goofy-deploy *`、`gd *`
 - `goofy preview *` 只有一个环境，无需区分 `cn` / `boe`
-- `goofy preview *` 适合本地目录直传；会自动识别 `dist` / `build` / `out`、静态站点目录、静态 Next.js 输出和带 `deploy.yml` 的目录
+- `goofy preview *` 支持自动识别多种目录结构（`deploy.yml` / Next.js / 静态站点 / 自动检测 `dist`/`build`/`out`），详见 `references/preview-directory.md`
 - 创建 channel 需要 region-id：先用 `list-regions --app-id <app_id>` 获取 Region ID
 - 版本部署流程：先获取 channel-id，再使用 `deploy-new` 或 `deploy-version`
 - `diagnose` / `get-deployment` / `cancel` / `retry` 除了 `--deploy-id <id>`，也接受直接粘贴 Goofy Web 页 URL（会自动从 URL 中提取 deployment id）
@@ -145,13 +147,30 @@ bytedcli --site cn goofy deploy diagnose --deploy-id 24913395 --show-deployment-
 
 ### Quick Preview / 快速预览部署
 
+#### 工作流
+
 1. 本地完成构建（如 `npm run build`）
-2. 直接部署构建目录或项目根目录：
-   - `goofy preview deploy . --alias <alias>`
-   - `goofy preview deploy dist --alias <alias> --override`
+2. 部署构建产物或项目根目录：
+   - `goofy preview deploy . --alias <alias>`（项目根目录，自动检测构建产物）
+   - `goofy preview deploy dist --alias <alias> --override`（指定构建产物目录）
+   - `goofy preview deploy .next --alias <alias>`（Next.js 静态导出）
 3. 查看 / 删除 preview：
    - `goofy preview list`
    - `goofy preview remove --preview-id <id>`
+
+#### 支持的目录类型（按识别优先级）
+
+- **带 `deploy.yml` 的项目**：符合 Goofy 部署配置协议，直接按配置部署
+- **Next.js 静态导出**：含 `.next/` 目录，自动整理 HTML 与静态资源
+- **纯静态站点**：根目录含 `index.html`，自动生成 `deploy.yml` 以 worker 模式部署
+- **项目根目录**：含 `package.json` / `src` 等源码标记，自动在 `dist/` / `build/` / `out/` 中查找构建产物
+
+#### 限制与注意事项
+
+- tarball 不超过 50 MB；alias 限字母、数字、连字符（不能以 `-` 开头）
+- 默认过期 365 天，可通过 `--expiry-days` 调整
+
+> 完整目录结构、示例与错误排查见 `references/preview-directory.md`。
 
 ### Normal Project Deploy / 普通项目部署
 
@@ -167,3 +186,4 @@ bytedcli --site cn goofy deploy diagnose --deploy-id 24913395 --show-deployment-
 ## References
 
 - `references/goofy-deploy.md`
+- `references/preview-directory.md` — Goofy Preview 支持的目录结构与项目类型

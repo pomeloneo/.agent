@@ -1,6 +1,6 @@
 ---
 name: bytedance-lark-devops
-description: "Operate Lark Devops via bytedcli — read queries against the release platform (release processes, spaces, apps, linked Bits pipelines on lark-devops.bytedance.net), the guarded simple-release write workflow (create / audit add-app / apply-stage / set-window / submit), the guarded dev-flow (BOE-only release) write workflow (create --flow dev / dev add-app / integrate / execute-pipeline / finish, strictly isolated from PRE/GRAY/ONLINE), and the FG (Feature Gate) OpenAPI (meta/rule get, grayscale rule CRUD, release tickets). All writes default to dry-run and require --execute + --yes-i-know-this-is-live. Use when tasks mention Lark Devops release orders, release spaces, release processes, process/pipeline drill-down, creating a release (simple or dev), dev flow / BOE test environment publish, integration pipeline, advancing audit stages, setting publish windows, submitting audits, feature gates, feature flags, grayscale rules, FG keys, or FG release tickets."
+description: "Operate Lark Devops via bytedcli — read queries against the release platform (release processes, spaces, apps, linked Bits pipelines on lark-devops.bytedance.net), the guarded simple-release write workflow (create / audit add-app / apply-stage / set-window / submit), the guarded dev-flow (BOE-only release) write workflow (create --flow dev / dev add-app / integrate / execute-pipeline / finish, strictly isolated from PRE/GRAY/ONLINE), and the FG (Feature Gate) OpenAPI (meta/rule get, grayscale rule CRUD, release tickets). All writes default to dry-run and require --execute + --yes-i-know-this-is-live. Use when tasks mention Lark Devops release orders/spaces/processes, process/pipeline drill-down, creating a release (simple or dev), dev flow / BOE test environment publish, integration pipeline, advancing audit stages, setting publish windows, submitting audits, feature gates / flags / grayscale rules / FG tickets, or Lark Scheduler (`lark-devops scheduler` 飞书调度: processor/job query + launch-review trigger)."
 ---
 
 # bytedcli Lark Devops
@@ -15,6 +15,7 @@ description: "Operate Lark Devops via bytedcli — read queries against the rele
 Both write flows default to dry-run; real writes require `--execute --yes-i-know-this-is-live`.
 
 Choose the subtree by capability:
+
 - Release data (process/space/app) ⇒ `bytedcli lark-devops process|space|app …`
 - Production release writes (simple flow) ⇒ `bytedcli lark-devops release create --flow simple …` + `audit …`
 - Dev/BOE release writes ⇒ `bytedcli lark-devops release create --flow dev …` + `dev …`
@@ -147,11 +148,11 @@ Same auth model as Section 1 (Chrome `beops_session` primary, SSO fallback). **W
 
 Every write subcommand follows the same pattern:
 
-| Flags | Behavior |
-|---|---|
-| no `--execute` | **Dry-run**: returns `{mode:"dry_run", endpoint, payload}` — safe preview, no HTTP write |
-| `--execute` only | **Rejected** with `LARK_DEVOPS_LIVE_WRITE_UNCONFIRMED` |
-| `--execute --yes-i-know-this-is-live` | **Live write** — actually sends the request |
+| Flags                                 | Behavior                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| no `--execute`                        | **Dry-run**: returns `{mode:"dry_run", endpoint, payload}` — safe preview, no HTTP write |
+| `--execute` only                      | **Rejected** with `LARK_DEVOPS_LIVE_WRITE_UNCONFIRMED`                                   |
+| `--execute --yes-i-know-this-is-live` | **Live write** — actually sends the request                                              |
 
 Always preview with dry-run, inspect the payload, **then** add both flags.
 
@@ -263,15 +264,19 @@ bytedcli lark-devops release get --process-id 76117 -j
   "preflight": {
     "ok": false,
     "unknown_repo_versions": [
-      { "unit": "CN", "repo_name": "toutiao/load", "requested_version": "1.0.2.618",
-        "available_versions": ["1.0.2.619", "1.0.2.620"] }
+      {
+        "unit": "CN",
+        "repo_name": "toutiao/load",
+        "requested_version": "1.0.2.618",
+        "available_versions": ["1.0.2.619", "1.0.2.620"]
+      }
     ],
     "missing_repo_versions": [],
     "selected_units": ["CN"],
     "skipped_units": [],
     "hint": "plan.repo_versions references versions the platform does not list. ..."
   },
-  "materialized": { "..." : "..." }
+  "materialized": { "...": "..." }
 }
 ```
 
@@ -344,8 +349,8 @@ bytedcli lark-devops release audit inspect-unit \
     "ee/ccm/box_preview_sdk": "1.0.0.693"
   },
   "units": {
-    "CN":      { "is_deploy": true },
-    "US":      { "is_deploy": true },
+    "CN": { "is_deploy": true },
+    "US": { "is_deploy": true },
     "SG_LARK": { "is_deploy": true }
   }
 }
@@ -355,8 +360,8 @@ bytedcli lark-devops release audit inspect-unit \
 
 ```json
 {
-  "pre_time":    { "start": 1776506082, "end": 1776507882 },
-  "gray_time":   { "start": 1776507882, "end": 1776637482 },
+  "pre_time": { "start": 1776506082, "end": 1776507882 },
+  "gray_time": { "start": 1776507882, "end": 1776637482 },
   "online_time": { "start": 1776637482, "end": 1776642882 },
   "desc": "",
   "status": "Done",
@@ -425,11 +430,11 @@ bytedcli lark-devops release audit inspect-unit \
 
 **拿不准时询问用户**（常见模糊词）：
 
-| 用户说 | 问用户确认 |
-|---|---|
-| "测试环境" | 是 BOE feature 测试（dev）还是 PRE_RELEASE 预发（simple）？ |
-| "跑 feature 分支" | 是只在 BOE 验证（dev）还是走完整上线流程（simple）？ |
-| "先发一下" | 目的地是 BOE（dev）还是生产环境（simple）？ |
+| 用户说            | 问用户确认                                                  |
+| ----------------- | ----------------------------------------------------------- |
+| "测试环境"        | 是 BOE feature 测试（dev）还是 PRE_RELEASE 预发（simple）？ |
+| "跑 feature 分支" | 是只在 BOE 验证（dev）还是走完整上线流程（simple）？        |
+| "先发一下"        | 目的地是 BOE（dev）还是生产环境（simple）？                 |
 
 两者 `release create` 参数只有 `--flow` 不同，但后续命令完全不共享（`release dev *` vs `release audit *`）。
 
@@ -538,8 +543,12 @@ bytedcli lark-devops release dev finish --process-id 76200 \
 {
   "apps": [
     { "app_id": 1452, "branch": "feat/foo", "boe_feature": "boe_my_test_env" },
-    { "app_id": 1789, "branch": "feat/bar", "boe_feature": "boe_my_test_env",
-      "repo_versions": { "ee/example/dep": "1.0.0.123" } }
+    {
+      "app_id": 1789,
+      "branch": "feat/bar",
+      "boe_feature": "boe_my_test_env",
+      "repo_versions": { "ee/example/dep": "1.0.0.123" }
+    }
   ]
 }
 ```
@@ -672,6 +681,59 @@ bytedcli lark-devops fg ticket list --id 6910 --unit cn
 - FG 发布工单串行：如有工单未到终态，写操作会被阻塞
 - `--comment` 强烈建议填写变更原因
 - 接口统一走 `https://lark-devops.bytedance.net`（含 BOE 数据）
+
+## 5. Lark Scheduler（调度服务，processor / job 查询 + 触发审核工单）
+
+lark-devops 平台「开发者工具」下的 Lark Scheduler 子应用，区别于通用 ByteCloud cronjob。命令前缀 `lark-devops scheduler`，认证复用 lark-devops 飞书登录。
+
+### 5.1 When to use
+
+- 查询 Lark Scheduler processor（处理器）配置列表，支持按 `--api-name` 过滤
+- 列出某环境下的 job（定时任务）配置
+- 获取单个 job 的配置详情
+- 查看某个 job 的执行历史（instance 运行记录）
+- 申请「立即触发」一个 job（走审核工单，需审核人 + 原因；默认 dry-run 预览，确认无误后再真正提交）
+
+### 5.2 Commands
+
+```bash
+# 列出 processor 配置（支持 --api-name 客户端过滤，--unit / --region 选择环境）
+bytedcli lark-devops scheduler processor list \
+  --api-name "demo-processor" --page 1 --page-size 20 --unit cn --region online
+
+# 列出 job 配置
+bytedcli lark-devops scheduler job list \
+  --page 1 --page-size 20 --unit cn --region online
+
+# 获取单个 job 配置详情
+bytedcli lark-devops scheduler job get \
+  --id 1234567890 --unit cn --region online
+
+# 查看某个 job 的执行历史（instance 运行记录）
+bytedcli lark-devops scheduler job run list \
+  --id 1234567890 --page 1 --page-size 20 --unit cn --region online
+
+# 申请触发一个 job（走审核工单）—— 默认 dry-run，仅打印将提交的工单内容，不真正提交
+# --reviewer / --reason 为提交所必填；reviewer 必须是该 job 的合法 operator 且不能是自己
+bytedcli lark-devops scheduler job trigger \
+  --id 1234567890 --reviewer demo-operator --reason "demo reason"
+
+# 申请触发一个 job —— 确认无误后加 --yes 才真正提交审核工单
+# 可选 --parameter 覆盖触发参数、--container 指定容器
+bytedcli lark-devops scheduler job trigger \
+  --id 1234567890 --reviewer demo-operator --reason "demo reason" \
+  --parameter '{"key":"value"}' --yes
+
+# 切换环境（unit + region）并以 JSON 输出（--json 是全局选项，放在子命令之前）
+bytedcli --json lark-devops scheduler job list \
+  --unit i18n --region online_staging
+```
+
+### 5.3 Notes
+
+- `job trigger` 是写操作，语义是**申请「立即触发」审核工单**（不是直接执行）：提交后需审核人通过才会真正触发。**默认 dry-run**（仅打印将提交的工单内容，不实际提交）；确认无误后显式加 `--yes` 才真正提交。`--reviewer`（审核人 username）与 `--reason`（申请原因）为提交所必填，且 reviewer 必须是该 job 的合法 operator、不能是申请人自己；`--parameter` 可选，覆盖触发参数（多数 job 是纯命令字符串，部分是 JSON object，按该 job 实际格式传）；`--container` 可选，指定容器。注：本命令的确认 flag 是单 `--yes`，与本 skill 其他 lark-devops 写命令（发布 / 网关，用 `--execute --yes-i-know-this-is-live` 双 flag）不同——因为 trigger 只是**提交审核工单**（需审批人通过后才真正执行），风险量级低于那些直接真实执行的写操作
+- **如何确定 `--reviewer`**：①用 `job get --id <jobID>` 查看 `operators` 字段（最直接）；②跑一次带合法 `--reviewer`/`--reason` 的 dry-run，输出含 `candidate_reviewers`。传入缺失/非法 reviewer 时（reviewer/reason 校验在 dry-run 之前），报错 hint 也会列出该 job 的候选审批人
+- 多环境：`--unit` 选择控制面（`cn` / `i18n` / `boe` / `us-ttp`，默认 `cn`），`--region` 选择具体 region（默认 `online`，例如 `online_staging` / `cn6` 等）
 
 ---
 

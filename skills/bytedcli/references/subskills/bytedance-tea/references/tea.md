@@ -19,6 +19,16 @@
 
 ## Command map
 
+- `bytedcli tea event send`
+  - 上报单条 TEA / ByteIO 事件；不支持批量文件上报
+  - `--app-id <id>`：TEA / ByteIO app_id，必填
+  - `--event <name>`：事件名，必填；事件名需以字母开头，只包含字母、数字、下划线、点或短横线
+  - 身份默认值：不传身份参数时，CLI 从 bytedcli auth / userinfo / JWT / SSO 解析当前用户作为 `user_unique_id`；解析失败回退 `installation_id`
+  - `--user-unique-id <id>`：覆盖自动解析出的用户 ID；`--device-id <id>` 与 `--web-id <id>` 可同时传，不互斥
+  - `--no-auto-user`：禁用自动用户解析和 `installation_id` 回退，此时必须显式传 `--user-unique-id` / `--device-id` / `--web-id` 至少一个；仅传 `device_id` 或 `web_id` 时，会将该值同步作为 payload 与 SDK 配置里的 `user_unique_id`
+  - `--require-user`：要求最终必须存在 `user_unique_id`，无法从登录态解析且未传 `--user-unique-id` 时失败
+  - 事件属性：`--params-file <file>` 先加载 JSON object，`--params-json <json>` 覆盖同名字段，重复 `--param key=value` 最后覆盖；`--param` 的 value 按字符串处理，数字/布尔请用 JSON
+  - `--timestamp-ms <ms>`：事件发生时间，默认当前时间；`--caller <caller>`：ByteIO caller，默认 `bytedcli.tea.event_send`；`--dry-run` 只构造 payload 不上报；`--dump <file>` 写出最终 payload
 - `bytedcli tea search`
   - `--type dashboard_info`：按看板 URL 解析出的 `dashboard_id` 获取看板信息
   - `--type dashboard_reports`：列出看板内报表（包含 report_id / report_type / 简要描述）
@@ -59,8 +69,8 @@
   - `--auth-mode <mode>`：dataopen | titan | auto
   - `--tea-base-url <url>`：直接覆盖 DataOpen 基址（仅 dataopen 模式）
   - 实际 endpoint：
-    - dataopen：`POST /dataopen/open-apis/datafinder/openapi/v1/projects/<pid>/analysis`，同步返回数组
-    - cn / va / sg titan：`POST /datafinder/api/v1/projects/<pid>/analysis` 返回 `{ result_id }`，CLI 自动轮询 `GET /datafinder/api/v1/analysis/<result_id>/result`；默认轮询超时 60s（结果尚未就绪时会输出 `result_id`/`status`，可重新执行同一条命令）
+    - dataopen：`POST /dataopen/open-apis/datafinder/openapi/v1/analysis`，同步返回数组
+    - cn / va / sg titan：`POST /datafinder/api/v1/analysis` 返回 `{ result_id }`，CLI 自动轮询 `GET /datafinder/api/v1/analysis/<result_id>/result`；默认轮询超时取 `max(60s, --http-timeout-ms)`（结果尚未就绪时会输出 `result_id`/`status`，可重新执行同一条命令）
     - sglark titan：`POST /datafinder/api/v1/projects/<pid>/dashboards/<did>/reports/<rid>/analysis`
 - `bytedcli tea behavior`
   - 查询行为细查行为流（behavior-detail/detail）。**仅 dataopen 模式可用，所有区域 titan 模式都不支持**（tea-next 内部 API `/datafinder/api/v1/...` 未暴露 `behaviors/flows_v3`），titan 调用会抛 `TEA_TITAN_NOT_SUPPORTED`。
@@ -77,7 +87,7 @@
   - 查询事件元数据（event metadata）。**仅 dataopen 模式可用，所有区域 titan 模式都不支持**（tea-next 内部 API 未暴露 `metadata/list/events`），titan 调用会抛 `TEA_TITAN_NOT_SUPPORTED`。
   - API: `/dataopen/open-apis/datafinder/openapi/v1/metadata/projects/:project_id/list/events`
   - `--project-id <projectId>`：TEA project_id
-  - `--events <events>`：（必填）事件名列表（逗号分隔，如 `app_launch,page_view`）
+  - `--events <events>`：事件名列表（逗号分隔，如 `example.play,example.view`），支持一个或多个事件，必填
   - `--status <status>`：事件状态列表（逗号分隔；可选值 0=审批中 1=已上报 3=停止采集 4=隐藏，默认 0,1,3,4）
   - `--with <with>`：附加返回信息（逗号分隔；可选值 params|virtual_params|property_dict|values|alias|event_groups|event_sample，默认 params）
   - `--dump <filepath>`：将原始 JSON 结果写入文件（相对路径基于工作目录）
@@ -97,7 +107,76 @@
   - `--dsl <dslJson>`：DSL JSON（字符串形式；也支持从 stdin 读取）
   - `project_id` 从 DSL 的 `resources[0].project_ids[0]` 自动提取，无需手动指定
 
-所有子命令都支持 `--json`（JSON Lines 输出）与 `--dump <filepath>`。
+### analysis 语义化查询
+
+`bytedcli tea analysis <model>` 把 7 个分析模型封装成语义化子命令，CLI 自动构造 DSL 并投递 `/analysis`，无需手写 JSON。它支持 dataopen cn/va/sg 与 titan cn/va/sg；sglark titan 不支持裸 `/analysis`，需要 sglark 时请改用 `tea query --url <tea-next-report-url>` 或 `tea query --project-id <pid> --dashboard-id <did> --report-id <rid>` 的三元组报表路径。所有子命令共享下列通用 option：
+
+- `--project-id <projectId>`：**必填**，有效 TEA project_id（缺失或非正整数报 `TEA_INPUT_ERROR`）；可从 tea-next 看板 URL 的 `/project/<id>/` 段获取
+- `--last <Nd|Nw|Nm>`：时间窗口，格式 `<数字><d|w|m>`，如 `30d` / `4w` / `3m`（默认 `30d`）
+- `--limit <n>`：结果行数上限（默认 50，不是分页 `--page-size`）；达上限会在输出里提示截断（请缩小窗口或调大 `--limit`）
+- `--no-validate`：跳过事件/属性预校验，直接构造 DSL 并查询（titan 模式自动跳过）
+- `--print-dsl`：只打印 CLI 构造出的 DSL，不鉴权、不发请求；需要实际 HTTP 请求/响应时，用全局参数 `bytedcli --http-debug tea analysis ...`
+- 认证 / 站点与 `tea query` 一致：`--region` / `--app-id` / `--app-secret` / `--tea-site` / `--auth-mode` / `--tea-base-url` / `--dump`；默认 `--auth-mode auto`，有 DataOpen 凭据时走 dataopen，否则 cn/va/sg 可回退 titan；JSON 输出使用全局 `bytedcli --json tea analysis ...`
+
+成功查询默认只输出归一化摘要，不落盘原始响应；若显式传 `--dump <filepath>`，则把完整原始 JSON 写入指定路径，并在输出中返回路径。终端不直接展开原始响应，避免大体量数据刷屏。
+
+属性字段统一支持类型后缀：`:common`（默认，公共事件属性）/ `:event`（事件私有属性）/ `:profile`（用户属性，注意不是 `user_profile`）。
+
+- `bytedcli tea analysis event`
+  - `--event <name>`：事件名（必填）
+  - `--indicator <ind>`：`count`(总次数PV) / `users`(总人数UV) / `penetration`(渗透率) / `per-user`(人均次数) / `per-active`(全活跃人均) / `measure`(自定义度量)
+  - `--measure-property <field>`：度量属性字段（需显式 `--indicator measure`，否则本地拒绝，避免静默退回基础指标）
+  - `--measure-agg <agg>`：9 种聚合 `sum`/`min`/`max`/`avg`/`per-user`/`per-active`/`distinct`/`distinct-user`/`pct`（仅 event 全支持）
+  - `--percentile <n>`：分位点（`measure-agg=pct` 必填，如 50/90；缺则 400012）
+  - `--group <field>`：分组维度，可重复或逗号分隔
+  - `--filter <expr>`：事件级过滤（按事件属性筛行，表达式可重复，多条默认 AND）
+  - `--cohort <spec>`：用户分群对比（按用户画像分组对照）
+  - `--granularity <g>`：`minute`/`five_minute`/`ten_minute`/`fifteen_minute`/`thirty_minute`/`hour`/`day`/`week`/`month`（禁 `all`）
+  - `--compare <type>`：环比 `last-cycle`/`last-week`/`last-month`/`last-year`，需配 `--period-start-ts`/`--period-end-ts`（秒级时间戳）指定当前周期
+  - `--filter` 表达式语法：`<字段[:类型]><操作符><值>`，操作符支持 `=` `!=` `>` `<` `>=` `<=` `in` `not_in` `contain` `not_contain` `match` `not_match` `is_null` `is_not_null`；多条 `--filter` 之间为 AND
+- `bytedcli tea analysis funnel`
+  - `--steps <e1,e2,...>`：漏斗步骤事件，逗号分隔或重复传入（必填，至少 2 个，按顺序为步骤）
+  - `--window-period <n>` + `--window-unit <minute|hour|day>`：转化窗口；`--no-window` 关闭窗口（不限制转化时长）
+  - `--unordered`：无序漏斗（默认有序，前一步发生后才计后一步）
+  - `--relation <field>`：步骤关联属性
+  - `--group <field>`：分组维度（只作用于首步 step1）；`--cohort <spec>`：用户分群
+  - `--granularity <g>`：禁 `minute`(1分)；支持 `five/ten/fifteen/thirty_minute`/`hour`/`day`/`week`/`month`/`all`
+  - funnel 无 indicator/measure 概念，只算各步转化率与转化人数
+- `bytedcli tea analysis retention`
+  - `--init-event <e>`：初始行为事件（如注册/首次播放）
+  - `--return-event <e>`：回访行为事件（次日及之后是否再次发生）
+  - `--group <field>` / `--cohort <spec>`：分组维度 / 用户分群
+  - `--granularity <day|week|month>`：仅支持 day/week/month（分钟级/小时/all 全报 400012）
+  - retention 无 indicator/measure 概念，输出留存矩阵（各周期回访率）
+- `bytedcli tea analysis composition`
+  - `--group-by <field>`：构成维度（必填，可重复或逗号分隔，支持多维交叉）；用户属性写 `:profile`
+  - `--cohort <spec>`：限定参与构成的用户群（不传则统计全量用户）
+  - 固定按 `all` 周期聚合，无 indicator/measure/granularity 概念，输出各维度取值的用户数构成
+- `bytedcli tea analysis path-find`
+  - `--start <event>` + `--end <event>`：起点与终点事件，必须同时提供（不能用 `any_event`，报 400014）
+  - `--window-period <n>` + `--window-unit <minute|hour|day>`：会话窗口
+  - `--group <field>`：按起点事件属性分组；`--cohort <spec>`：用户分群
+  - **不支持事件级 `--filter`**：起点/终点不能挂事件属性过滤（传了报 400000），按用户筛选请用 `--cohort`
+  - 专属 option 字段缺失会报 400056，CLI 已自动补齐；输出桑基图节点数据
+- `bytedcli tea analysis life-cycle`
+  - `--event <name>`：事件名
+  - `--mode <active|lost>`：active（活跃视角，返回 4 种用户类型）/ lost（流失视角，返回 3 种用户类型）
+  - `--period <n>` + `--period-granularity <day|week|month>`：一个生命周期的长度（如 7 天为一个周期判断活跃/流失）
+  - `--group <field>` / `--cohort <spec>`：分组维度 / 用户分群
+  - `--granularity <day|week|month|all>`：仅支持 day/week/month/all（分钟级/小时报 400012）
+  - 输出二维数据：每个阶段的用户数与占比（%）
+- `bytedcli tea analysis distribution`
+  - `--event <name>`：事件名
+  - `--indicator <ind>`：基础指标；**做度量分布必须显式 `--indicator measure`**（只传 `--measure-property`/`--measure-agg` 而不带 `--indicator measure` 会被拒：`TEA_INPUT_ERROR`，避免静默退回基础指标查出错数）
+  - `--measure-property <field>`：要分布的度量字段（需 `--indicator measure`；注意写对类型后缀，如事件参数加 `:event`）
+  - `--measure-agg <agg>`：**仅 6 种** `sum`/`avg`/`max`/`min`/`distinct`/`distinct-user`（不支持 `per-user`/`per-active`/`pct`，传了报 400000）
+  - `--buckets <n>`（自动等分桶数）与 `--breaks <list>`（自定义断点列表，右闭左开）二选一，不能同时使用
+  - `--group <field>` / `--cohort <spec>`：分组维度 / 用户分群
+  - `--granularity <g>`：全支持含 `all`（与 event 相反，event 禁 all，distribution 可用 all）
+
+通用错误码：`400012`（measure_info 错误，`measure-agg=pct` 缺 `--percentile`，后端字段 `measure_value`）/ `400014`（路径参数错，path-find 用 any_event）/ `400055`（`DB::Exception`，通常是查询计算量过大被后端数据库引擎拒绝执行，优先缩短 `--last`、降低粒度、减少分组或拆小查询）/ `400056`（path-find 缺专属字段）/ `400062`（属性类型填错）/ `400108`（无权限，需在 TEA App 页申请功能包）/ `400114`（认证失败）。
+
+所有子命令都支持全局 `bytedcli --json ...`（JSON Lines 输出）与 `--dump <filepath>`。
 
 ## Sites
 

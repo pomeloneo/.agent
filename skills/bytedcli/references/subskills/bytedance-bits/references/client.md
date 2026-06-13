@@ -37,7 +37,8 @@ bytedcli bits client calendar ...
     - `jobId`
   - 常见用途：
     - 查 job 详情
-    - 获取 job 日志链接
+    - 获取 job 日志下载链接（log-url，走控制台 BFF，对 legacy build job 也有效）
+    - 下载 job 完整构建日志到本地文件（download-log，日志可能 100MB+，流式落盘）
     - retry / cancel / skip
     - trigger / trigger-template
     - update / update-result / update-msg / update-url
@@ -80,9 +81,10 @@ bytedcli bits client workflow pipeline trigger-template \
 # 从 MR 找最新 pipeline
 bytedcli bits client workflow pipeline from-mr --mr-id 123456
 
-# job 详情 / 日志链接 / 重试
+# job 详情 / 日志链接 / 下载日志 / 重试
 bytedcli bits client workflow job get --job-id 123
 bytedcli bits client workflow job log-url --job-id 123
+bytedcli bits client workflow job download-log --job-id 123 --output ./job-123.log
 bytedcli bits client workflow job retry --job-id 123 --env '{"key":"value"}'
 
 # 取消 / 跳过

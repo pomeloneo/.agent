@@ -59,7 +59,7 @@ bytedcli oneservice logic create --project-id <projectId>
 ```
 
 - `search` 是项目内搜索；多结果时返回 `next_action.kind = MULTIPLE_RESULTS_SELECT_ONE`（成功，退出 0）。**所有命中都要展示给用户，不要自动选第一条**
-- `get` 返回 `db_name`、`table_name`、`fields[]`（每个含 `name` / `type` / `description`）
+- `get` 返回 `db_name`、`table_name`、`phy_table_name`（绑定的上游物理表列表，如 `["mydb.my_table_di"]`）、`fields[]`（每个含 `name` / `type` / `description`）
 - `create` 支持 `--type clickhouse` 和 `--type doris`，把已有物理表绑定为 OneService 逻辑表；Doris 物理表必须额外传 `--namespace <dorisNamespace>`；当前 CN Doris namespace 使用 `cn`；`--project-id` / `--folder-id` 会按后端要求作为 numeric int64 发送
 - `create` 用全局 `--site` 选择 OneService 控制面，CLI 内部按 site 推导后端 region
 - 接 OneService 这类 int64 ID 时，CLI 内部仍应把用户输入按 string 保存到最后一跳；如果后端硬要求 JSON number，只能用原始 JSON 字符串拼接数字字面量，测试也要避免 `JSON.parse` 这些字段导致精度截断

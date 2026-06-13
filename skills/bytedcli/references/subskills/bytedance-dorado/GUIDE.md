@@ -34,7 +34,7 @@ bytedcli <command> [options]
 - 下载 Dorado 实例日志（页面态 cookie，`dorado download-instance-log`）
 - 获取 notebook 实例“运行结果”JSON（`dorado instance notebook-result`，默认读取 `{taskId}_{instanceId}.ipynb`）
 - 创建任务（指定 `--type`）
-- Resolve the task-template root folder with `bytedcli dorado task template root-folder get --region <region> --project-id <project-id>`, then create an HSQL task template with `bytedcli dorado task template create --region <region> --project-id <project-id> --name <template-name> [--description <text>]`. `template create` can also accept `--folder-id <folder-id>` directly; when `--folder-id` is omitted it resolves the template root folder from `--project-id`. The create command posts a template form to the region's Dorado `/develop` endpoint (`type=template`, `subType=hsql`); use placeholder values such as `demo-template`, `12345`, and `67890` in examples.
+- Resolve the task-template root folder with `bytedcli dorado task template root-folder get --region <region> --project-id <project-id>`, read a template detail with `bytedcli dorado task template get --region <region> --template-id <template-id> --project-id <project-id>`, then create an HSQL task template with `bytedcli dorado task template create --region <region> --project-id <project-id> --name <template-name> [--description <text>]`. `template create` can also accept `--folder-id <folder-id>` directly; when `--folder-id` is omitted it resolves the template root folder from `--project-id`. The create command posts a template form to the region's Dorado `/develop` endpoint (`type=template`, `subType=hsql`); use placeholder values such as `demo-template`, `12345`, `24680`, and `67890` in examples.
 - 转交任务 owner（`dorado task transfer-owner`）
 - 更新 SQL 任务（hsql/fsql/stream_sql）的查询（`task update --query`/`--type`）
 - MySQL->Hive binlog 状态检查与接入（`task binlog status` / `task binlog connect`）
@@ -202,6 +202,22 @@ bytedcli dorado baseline get --baseline-id <baseline-id> --project-id <project-i
 # 创建任务
 bytedcli dorado task create --type hsql --project-id 458 --name "demo_task" --region boei18n
 
+# 获取任务模板详情：按所选 region 发送 GET /develop/info?id=<template_id>&projectId=<project_id>
+bytedcli dorado task template get \
+  --template-id 24680 \
+  --project-id 12345 \
+  --region sg
+
+# 保存任务模板内容：按所选 region 发送 PUT /develop/<template_id>
+# --region sg 会使用 Dorado SG site config 中的 region base URL
+# 可用 --params-json '[]' 显式传模板参数，或用 --conf-file ./conf.json 传完整 { "code", "engineType", "params" } 对象
+bytedcli dorado task template save \
+  --template-id 24680 \
+  --region sg \
+  --code-file ./template.sql \
+  --engine-type spark \
+  --description "CommonTemplate for demo-group; validation tasks"
+
 # 创建 DTS 批处理任务（common-dts-batch）
 bytedcli dorado task create --type common-dts-batch --project-id 300002016 --folder-id 300370052 --name "demo_dts_task" --region sg
 
@@ -295,12 +311,14 @@ bytedcli dorado task commit-approval <task-id> --project-id <project-id> \
   --region mycis
 
 # 批量提交审批（deploy/v2/create，同一个 deploy package 可包含多个 commit）
+# --skip-codes 会同时注入 body 与 URL query（与单任务 commit-approval/online 一致），可跳过 -10000 这类确认告警（如「已存在其他任务同步同名表，请确认上线」）
 bytedcli dorado task commit-batch-approval --project-id <project-id> \
   --name demo_pkg_20260507 \
   --message "batch approval" \
   --review-policy-id 24 \
   --review-users "demo-user-a,demo-user-b" \
   --commit-ids "108103,108111,108110" \
+  --skip-codes "-1005,-10000" \
   --region mycis
 
 # 查看发布包详情里的 DIFF SQL（deploy/{deployId}/detail?projectId=...；无显式 diff 字段时比较 rawCommitVo/newCommitVo 代码快照）
@@ -425,6 +443,7 @@ bytedcli dorado task-draft update <task-id> -r sg --dts-read-query "select col1 
 
 # 测试运行任务草稿（debug run）
 bytedcli dorado task-draft test 100274211 --project-id 458 --region boei18n
+# 默认会打印本次提交调试所使用的 SQL（debug_sql）；`--json` 输出也会在 `data.debug_sql` 返回该 SQL
 
 # 校验 HSQL / stream_sql 任务草稿语法
 bytedcli dorado task-draft explain 100274211 --project-id 458 --region boei18n
@@ -803,7 +822,7 @@ If the built-in region list does not cover the target IDC/region, prefer adding 
   - 不传 `--dts-read-source-type` 时，其他 DTS 参数支持局部更新，只传需要修改的字段即可
 - `task-draft update --dependencies` 接受 `taskId[:offsets:offsetsType]` 格式的逗号分隔列表，offsets 默认 0，offsetsType 默认 set（如 `123,456` 等同于 `123:0:set,456:0:set`），可配合 `task dep-recommendations` 获取推荐依赖
 - `task-draft update --outer-dependencies` 配置跨机房依赖，格式为 `taskId@region[:offsets[:offsetsType]]` 逗号分隔；例如 `--outer-dependencies "306220763@sg"` 表示依赖 sg 机房的任务 306220763，默认 offsets=0、offsetsType=set；支持多 region 混合（如 `"100@sg,200@va:0:set"`）
-- `task-draft test` 返回 Debug ID，可用 `adhoc status` 查询状态，用 `adhoc result` 获取结果
+- `task-draft test` 返回 Debug ID，并默认输出本次调试提交的 SQL（`debug_sql`）；`--json` 输出会在 `data.debug_sql` 返回该 SQL。可用 `adhoc status` 查询状态，用 `adhoc result` 获取结果
 - `task dep-recommendations` 解析任务 SQL 并推荐产出相关表的上游任务，便于快速配置任务依赖
 - `node save --image-name/--image-id` 支持为 python/notebook/spark 三种任务类型更新 Docker 镜像；save 时会自动获取当前草稿并检测任务类型，将镜像写入对应位置（spark 写入 `conf.configuration.operator.parameter.image`，python 写入 `conf.configuration.operator.parameter.image` 并设置 `jobType`，notebook 写入 `executeParam.image`）
 - `node create` 同样支持 `--image-name/--image-id`，适用于 `--type python/notebook/spark`；创建后会自动补写镜像配置（平台 create API 不完全持久化嵌套 conf，CLI 自动做一次 save 补充）

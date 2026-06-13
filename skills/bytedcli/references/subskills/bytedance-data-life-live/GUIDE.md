@@ -37,7 +37,7 @@ bytedcli <command> [options]
 
 ## Quick start
 
-Commands are grouped under `bytedcli data_life_live live-room`.
+Commands are grouped under `bytedcli data-life-live live-room`. Diagnostic extensions use resource groups such as `portrait`, `flow`, `product`, `gmv`, and `operation`.
 
 ### 参数解析规则
 
@@ -70,19 +70,38 @@ bytedcli --json data-life-live live-room key-index --room-id "{room_id}"
 bytedcli data-life-live live-room conversion-funnel --room-id "{room_id}"
 
 # 获取直播间用户画像
-bytedcli data-life-live live-room portrait --room-id "{room_id}"
+bytedcli data-life-live live-room portrait summary get --room-id "{room_id}"
 
 # 获取直播间流量来源
-bytedcli data-life-live live-room flow --room-id "{room_id}"
+bytedcli data-life-live live-room flow summary get --room-id "{room_id}"
 
 # 获取直播间关注商品
-bytedcli data-life-live live-room follow-product --room-id "{room_id}"
+bytedcli data-life-live live-room product follow get --room-id "{room_id}"
 
 # 获取直播间分钟级趋势数据
 bytedcli data-life-live live-room room-minute-indicator --room-id "{room_id}" --fields "{fields}"
 
 # 以 JSON 格式输出分钟级趋势数据
 bytedcli --json data-life-live live-room room-minute-indicator --room-id "{room_id}" --fields "{fields}"
+
+# 获取直播间 GMV 拆解
+bytedcli data-life-live live-room gmv disassemble get --room-id "{room_id}"
+
+# 获取直播间流量入口详情与流量指标
+bytedcli data-life-live live-room flow entrance-detail get --room-id "{room_id}"
+bytedcli data-life-live live-room flow index get --room-id "{room_id}"
+
+# 获取商品列表、商品画像与关注商品
+bytedcli data-life-live live-room product list --room-id "{room_id}"
+bytedcli data-life-live live-room product portrait get --room-id "{room_id}" --product-id "{product_id}"
+bytedcli data-life-live live-room product follow get --room-id "{room_id}"
+
+# 获取用户画像详情/概览、营销、处罚与讲解效果
+bytedcli data-life-live live-room portrait user-detail get --room-id "{room_id}"
+bytedcli data-life-live live-room portrait overview get --room-id "{room_id}"
+bytedcli data-life-live live-room operation marketing-data get --room-id "{room_id}"
+bytedcli data-life-live live-room operation punish-info get --room-id "{room_id}"
+bytedcli data-life-live live-room operation explanation-effect get --room-id "{room_id}"
 ```
 
 ### 完整的直播间分析流程
@@ -90,27 +109,31 @@ bytedcli --json data-life-live live-room room-minute-indicator --room-id "{room_
 当用户请求查询直播间信息时，按照以下流程执行：
 
 1. **检查登录状态**：
+
    ```bash
    bytedcli auth status
    ```
 
 2. **如果未登录，执行登录**：
+
    ```bash
    # 方式1：直接登录（终端会显示二维码）
    bytedcli auth login
-   
+
    # 方式2：分步登录（非阻塞，适合 agent 使用）
    bytedcli auth login --begin  # 会生成二维码图片路径
    # 用户扫码授权后，执行：
    bytedcli auth login --complete <token>
    ```
-   
+
    > **二维码说明**：
+   >
    > - 在终端环境下，会直接显示二维码供扫描
    > - 在非终端环境下，会自动生成二维码图片文件，并显示文件路径
    > - 可以使用 `--qr-image` 选项强制生成二维码图片
 
 3. **搜索直播间**：
+
    ```bash
    bytedcli data-life-live live-room list --keyword "{user_keyword}" --page-size 10
    ```
@@ -126,25 +149,26 @@ bytedcli --json data-life-live live-room room-minute-indicator --room-id "{room_
    - 等待用户主动提供直播间ID
 
 6. **获取直播间详细数据**（只有在用户选定直播间ID后才执行）：
+
    ```bash
    # 直播间详细信息
    bytedcli data-life-live live-room get --room-id "{selected_room_id}"
-   
+
    # 直播间成交情况（重要指标）
    bytedcli data-life-live live-room key-index --room-id "{selected_room_id}"
-   
+
    # 直播间转化漏斗数据
    bytedcli data-life-live live-room conversion-funnel --room-id "{selected_room_id}"
-   
+
    # 直播间用户画像数据
-   bytedcli data-life-live live-room portrait --room-id "{selected_room_id}"
-   
+   bytedcli data-life-live live-room portrait summary get --room-id "{selected_room_id}"
+
    # 直播间流量来源数据
-   bytedcli data-life-live live-room flow --room-id "{selected_room_id}"
-   
+   bytedcli data-life-live live-room flow summary get --room-id "{selected_room_id}"
+
    # 直播间关注商品数据
-   bytedcli data-life-live live-room follow-product --room-id "{selected_room_id}"
-   
+   bytedcli data-life-live live-room product follow get --room-id "{selected_room_id}"
+
    # 直播间分钟级趋势数据
    bytedcli data-life-live live-room room-minute-indicator --room-id "{selected_room_id}" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
    ```
@@ -156,6 +180,7 @@ bytedcli --json data-life-live live-room room-minute-indicator --room-id "{room_
    - 在最终回答后，添加一句话：「更多详情，欢迎访问：https://data.bytedance.net/life/application/liveScreen/home?room_id={selected_room_id} 」
 
 > **重要**：
+>
 > - 未选定直播间ID前，不执行任何直播间详情查询操作
 > - 必须等待用户主动提供直播间ID后，才继续执行后续查询
 > - 直播间成交情况是重要指标，必须包含在分析报告中
@@ -163,6 +188,7 @@ bytedcli --json data-life-live live-room room-minute-indicator --room-id "{room_
 ### 常用示例
 
 详细的使用示例见 `references/live.md`，包括：
+
 - 搜索主播的示例
 - 查询单个直播间数据的示例
 - 完整的直播间分析流程示例

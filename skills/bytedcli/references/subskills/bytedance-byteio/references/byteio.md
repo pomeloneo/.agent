@@ -25,9 +25,14 @@ Never hardcode real authorization values in repository files, test fixtures, ski
 | Region | OpenAPI base |
 |--------|--------------|
 | `cn` | `https://openapi-dp.byted.org/openapi/byteio-cn` |
-| `sg` | `https://openapi-alisg.byted.org/openapi/byteio-sg` |
+| `sg` (default, office network) | `https://openapi-alisg.tiktok-row.org/openapi/byteio-sg` |
+| `sg` (`BYTEDCLI_NETWORK_PROFILE=prod`) | `https://openapi-alisg.byted.org/openapi/byteio-sg` |
 
 Use `--region cn|sg`; default is `cn`.
+
+SG 有两个 host，按网络环境切换：
+- 默认（办公网 / 本地 CLI）：`openapi-alisg.tiktok-row.org`，仅办公网可达，生产网不可用。
+- `BYTEDCLI_NETWORK_PROFILE=prod`：`openapi-alisg.byted.org`，开发机 / BOE / PPE / 线上服务端可达，办公网不可达。
 
 ## Commands and APIs
 

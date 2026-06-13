@@ -742,6 +742,9 @@ bytedcli --site i18n-tt libra experiment screenshot --flight-id demo-72021678
 # 第二步：指定指标组 ID 直接截图
 bytedcli --site i18n-tt libra experiment screenshot --flight-id demo-72021678 --metric-group demo-7015764
 
+# 维度筛选截图：--dims 支持原始 JSON 或直接粘贴 URL 中已编码的 dims= 值
+bytedcli --site i18n-tt libra experiment screenshot --flight-id demo-72021678 --metric-group demo-7015764 --dims '[{"dims":[{"dimension_key":"channel","id":83516,"vals":[{"id":134188507},{"id":134188508}]}],"relation_type":"normal"}]'
+
 # 指定输出路径
 bytedcli --site i18n-tt libra experiment screenshot --flight-id demo-72021678 --metric-group demo-7015764 --output ~/section.png
 ```
@@ -752,10 +755,11 @@ bytedcli --site i18n-tt libra experiment screenshot --flight-id demo-72021678 --
 | ---------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- |
 | `--flight-id <id>`     | 实验 Flight ID（必填）                                                         | -                                              |
 | `--metric-group <id>`  | 指标组 ID；不填时列出该实验所有可用指标组                                      | -                                              |
+| `--dims <json>`        | 维度筛选 JSON；支持原始 JSON 或从 Libra URL 复制出的 URL-encoded `dims=` 值    | -                                              |
 | `--output <path>`      | 输出 PNG 文件路径                                                              | `libra-<flight_id>-<timestamp>.png`（当前目录）|
 | `--wait-ms <ms>`       | 页面 networkidle2 后额外等待时间（ms），报告较慢时可适当增加                   | `5000`                                         |
 
-**说明：** 不指定 `--metric-group` 时，直接调用 Libra 报告 API 列出指标组，无需启动浏览器。指定 `--metric-group` 后，CLI 通过无头浏览器（puppeteer）注入 Titan Passport Cookie 加载报告页，等待渲染后截图保存。认证方式与其他 `--site i18n-tt` 命令相同，需先完成 `bytedcli auth login --site i18n-tt` 登录。
+**说明：** 不指定 `--metric-group` 时，直接调用 Libra 报告 API 列出指标组，无需启动浏览器。指定 `--metric-group` 后，CLI 通过无头浏览器（puppeteer）注入 Titan Passport Cookie 加载报告页，等待渲染后截图保存。传 `--dims` 时，CLI 会构造带 `dims`、`dim_group_id=<metric-group>`、`category=watching`、`period_type=d` 的页面 URL，以便截图对应维度筛选后的报表。认证方式与其他 `--site i18n-tt` 命令相同，需先完成 `bytedcli auth login --site i18n-tt` 登录。
 
 **前置条件（截图功能）：** 需要本机安装 Google Chrome 或 Chromium。CLI 按以下优先级查找可执行文件：
 1. 环境变量 `PUPPETEER_EXECUTABLE_PATH`（显式指定路径，优先级最高）

@@ -505,6 +505,12 @@ bytedcli dorado task template root-folder get \
   --region sg \
   --project-id 12345
 
+# Read an HSQL task template detail; projectId is required by the Dorado detail endpoint.
+bytedcli dorado task template get \
+  --region sg \
+  --template-id 24680 \
+  --project-id 12345
+
 # Create an HSQL task template; --folder-id is auto-resolved from --project-id.
 bytedcli dorado task template create \
   --region sg \
@@ -950,7 +956,7 @@ bytedcli dorado task commit-batch-approval [options]
 - `--review-policy-id <id>` - Review policy ID (required; must be explicitly provided by the caller for the current project)
 - `--review-users <users>` - Comma-separated reviewer usernames (required; must be explicitly provided by the caller for the current project)
 - `--commit-ids <ids>` - Comma-separated commit IDs to include in the batch (required)
-- `--skip-codes <codes>` - Skip specific error codes during approval submission
+- `--skip-codes <codes>` - Skip specific error codes during approval submission (e.g. `-1005`, or `-10000` for confirmation-class alarms such as "another task already syncs the same table, confirm to deploy"). The value is injected into both the request body and the URL query, matching single-task `commit-approval`/`online`, so batch approval can skip these confirmation prompts.
 - `--develop-conf <json>` - Optional `deployPackage.developConf` JSON object
 - `-r, --region <region>` - Dorado region (default: "cn")
 
@@ -988,6 +994,58 @@ bytedcli dorado deploy diff-sql --deploy-id <deployId> --project-id <projectId> 
 
 ```bash
 bytedcli dorado deploy diff-sql --deploy-id <deploy-id> --project-id <project-id> --region mycis
+```
+
+---
+
+### deploy approve
+
+Approve a Dorado deploy package (`PUT /deploy/{deployId}/approve?projectId=...`).
+This is a write operation that takes effect immediately and cannot be undone; omit `--yes` to preview the target deploy package before execution.
+
+```bash
+bytedcli dorado deploy approve --deploy-id <deployId> --project-id <projectId> [options]
+```
+
+**Options:**
+
+- `--deploy-id <deployId>` - Deploy package ID (required)
+- `--project-id <projectId>` - Project ID (required)
+- `--review-message <message>` - Review message passed as `reviewMessage`
+- `--skip-codes <codes>` - Skip specific error codes during deploy package review
+- `--yes` - Confirm and execute the approve operation
+- `-r, --region <region>` - Dorado region (default: "cn"; use `mycis` for `dataleap-mycis.byteintl.net`)
+
+**Example:**
+
+```bash
+bytedcli dorado deploy approve --deploy-id <deploy-id> --project-id <project-id> --region mycis --yes
+```
+
+---
+
+### deploy reject
+
+Reject a Dorado deploy package (`PUT /deploy/{deployId}/reject?projectId=...`).
+This is a write operation that takes effect immediately and cannot be undone; omit `--yes` to preview the target deploy package before execution.
+
+```bash
+bytedcli dorado deploy reject --deploy-id <deployId> --project-id <projectId> [options]
+```
+
+**Options:**
+
+- `--deploy-id <deployId>` - Deploy package ID (required)
+- `--project-id <projectId>` - Project ID (required)
+- `--review-message <message>` - Review message passed as `reviewMessage`
+- `--skip-codes <codes>` - Skip specific error codes during deploy package review
+- `--yes` - Confirm and execute the reject operation
+- `-r, --region <region>` - Dorado region (default: "cn"; use `mycis` for `dataleap-mycis.byteintl.net`)
+
+**Example:**
+
+```bash
+bytedcli dorado deploy reject --deploy-id <deploy-id> --project-id <project-id> --region cn --review-message "not approved" --yes
 ```
 
 ---
@@ -1852,19 +1910,19 @@ The response includes `flinkWebUi` (Flink Web UI proxy URL) and an `events` arra
 
 ## Task Types
 
-| Type               | Description                                                         | Managed via                    |
-| ------------------ | ------------------------------------------------------------------- | ------------------------------ |
-| `hsql`             | Hive SQL task - runs SQL queries                                    | `task` / `task-draft` commands |
-| `fsql`             | Flink SQL task - runs streaming SQL queries                         | `task` / `task-draft` commands |
-| `stream_sql`       | Stream SQL task - continuous streaming SQL processing               | `task` / `task-draft` commands |
-| `python`           | Python script task - runs Python code with Docker image             | `node` commands                |
-| `notebook`         | Jupyter Notebook task - interactive notebook execution              | `node` commands                |
-| `spark`            | Spark task (PySpark/Java/Scala) - runs Spark jobs with Docker image | `node` commands                |
-| `mysql->hive`      | DTS task - syncs data from MySQL to Hive                            | `task` commands                |
-| `hive->bmq`        | DTS task - syncs data from Hive to BMQ                              | `task` commands                |
-| `hive->clickhouse` | DTS task - syncs data from Hive to ClickHouse                       | `task` commands                |
-| `common-dts-batch` | Generic DTS batch task                                              | `task` commands                |
-| `common-dts-stream`| Generic DTS streaming task (e.g. bmq->hive); created via `/realtime/create` | `task` commands         |
+| Type                | Description                                                                 | Managed via                    |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------ |
+| `hsql`              | Hive SQL task - runs SQL queries                                            | `task` / `task-draft` commands |
+| `fsql`              | Flink SQL task - runs streaming SQL queries                                 | `task` / `task-draft` commands |
+| `stream_sql`        | Stream SQL task - continuous streaming SQL processing                       | `task` / `task-draft` commands |
+| `python`            | Python script task - runs Python code with Docker image                     | `node` commands                |
+| `notebook`          | Jupyter Notebook task - interactive notebook execution                      | `node` commands                |
+| `spark`             | Spark task (PySpark/Java/Scala) - runs Spark jobs with Docker image         | `node` commands                |
+| `mysql->hive`       | DTS task - syncs data from MySQL to Hive                                    | `task` commands                |
+| `hive->bmq`         | DTS task - syncs data from Hive to BMQ                                      | `task` commands                |
+| `hive->clickhouse`  | DTS task - syncs data from Hive to ClickHouse                               | `task` commands                |
+| `common-dts-batch`  | Generic DTS batch task                                                      | `task` commands                |
+| `common-dts-stream` | Generic DTS streaming task (e.g. bmq->hive); created via `/realtime/create` | `task` commands                |
 
 ## Instance Status
 

@@ -505,18 +505,20 @@ bytedcli aeolus query-editor file write-sql --file-id 456 --sql "SELECT 1"
 bytedcli aeolus query-editor file search --keyword "test"
 
 # SQL execution
-bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --sql "SELECT 1"
-bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --file ./queries/demo.sql
+bytedcli aeolus query-editor queues
+bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --queue <your_queue> --sql "SELECT 1"
+bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --queue <your_queue> --file ./queries/demo.sql
 bytedcli aeolus query-editor query status --task-id 789 --file-id 456 --folder-id 123
 bytedcli aeolus query-editor query logs --task-id 789
+bytedcli aeolus query-editor query cancel --task-id 789
 
 # One-shot query (auto-creates file, runs SQL, returns results)
-bytedcli aeolus query-editor query one --sql "SELECT 1"
+bytedcli aeolus query-editor query one --queue <your_queue> --sql "SELECT 1"
 ```
 
 ### Query Editor: ClickHouse (`--engine ch`)
 
-默认走 Hive `/hive/task/run`；与浏览器 Query Editor 一致的 ClickHouse 任务请用 **`--engine ch`**（`/ch/task/*`）、并保证 **`status` / `logs` 与 `run` 使用相同 `--engine`**。参数表、`QE_APP_ID`、`BYTEDCLI_CLOUD_SITE`（VA/SG 常为 `i18n-tt`）等完整说明见 **`references/aeolus.md` 的「Query Editor」章节**。
+默认走 Hive `/hive/task/run`；与浏览器 Query Editor 一致的 ClickHouse 任务请用 **`--engine ch`**（`/ch/task/*`）、并保证 **`status` / `logs` / `cancel` 与 `run` 使用相同 `--engine`**。参数表、`QE_APP_ID`、`BYTEDCLI_CLOUD_SITE`（VA/SG 常为 `i18n-tt`）等完整说明见 **`references/aeolus.md` 的「Query Editor」章节**。
 
 ### Recommended usage: `query one` vs full Query Editor workflow
 
@@ -540,11 +542,11 @@ bytedcli aeolus query-editor file create --name "daily-sample" --folder-id 123
 bytedcli aeolus query-editor file create --name "rootcause-drilldown" --folder-id 123
 
 # 3) Run queries against the same reusable file/folder IDs
-bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --sql "SHOW PARTITIONS svc_frk.ods_cp_cds_keys_df"
-bytedcli aeolus query-editor query run --file-id 457 --folder-id 123 --sql "SELECT * FROM svc_frk.ods_cp_cds_keys_df WHERE date = '20260412' LIMIT 100"
-bytedcli aeolus query-editor query run --file-id 457 --folder-id 123 --file ./queries/daily-sample.sql
-bytedcli aeolus query-editor query run --file-id 458 --folder-id 123 --sql "SELECT protocol, date FROM svc_frk.ods_cp_cds_keys_usttp_df WHERE date = '20260412' LIMIT 10"
-bytedcli aeolus query-editor query run --file-id 458 --folder-id 123 --sql "SELECT to_service, count(*) FROM svc_frk.ods_cp_cds_keys_usttp_df WHERE date = '20260412' GROUP BY to_service LIMIT 20"
+bytedcli aeolus query-editor query run --file-id 456 --folder-id 123 --queue <your_queue> --sql "SHOW PARTITIONS svc_frk.ods_cp_cds_keys_df"
+bytedcli aeolus query-editor query run --file-id 457 --folder-id 123 --queue <your_queue> --sql "SELECT * FROM svc_frk.ods_cp_cds_keys_df WHERE date = '20260412' LIMIT 100"
+bytedcli aeolus query-editor query run --file-id 457 --folder-id 123 --queue <your_queue> --file ./queries/daily-sample.sql
+bytedcli aeolus query-editor query run --file-id 458 --folder-id 123 --queue <your_queue> --sql "SELECT protocol, date FROM svc_frk.ods_cp_cds_keys_usttp_df WHERE date = '20260412' LIMIT 10"
+bytedcli aeolus query-editor query run --file-id 458 --folder-id 123 --queue <your_queue> --sql "SELECT to_service, count(*) FROM svc_frk.ods_cp_cds_keys_usttp_df WHERE date = '20260412' GROUP BY to_service LIMIT 20"
 
 # 4) Optionally persist SQL into the file body for later viewing/editing in Query Editor UI
 bytedcli aeolus query-editor file write-sql --file-id 456 --sql "SHOW PARTITIONS svc_frk.ods_cp_cds_keys_df"
@@ -553,6 +555,7 @@ bytedcli aeolus query-editor file write-sql --file-id 457 --sql "SELECT * FROM s
 # 5) Inspect task status / logs and search historical SQL files later
 bytedcli aeolus query-editor query status --task-id 789 --file-id 456 --folder-id 123
 bytedcli aeolus query-editor query logs --task-id 789
+bytedcli aeolus query-editor query cancel --task-id 789
 bytedcli aeolus query-editor file search --keyword "svc_frk"
 ```
 

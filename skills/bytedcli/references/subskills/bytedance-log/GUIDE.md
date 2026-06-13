@@ -1,6 +1,6 @@
 ---
 name: bytedance-log
-description: "Operate log service via bytedcli: search logs by PSM/LogID/instance/pod, view log clusters; plus Footprint TCE Sync (tail/head/ls/grep on TCE pod log files for US-TTP / US-TTP2). Use when tasks mention log search, logid lookup, instance logs, log clustering, Footprint, footprint.tiktok-row.net, TCE log, tce_search_mode, 看 pod 日志, or tail/grep TCE 容器内日志."
+description: "Operate log service via bytedcli: search logs by PSM/LogID/instance/pod, view log clusters; plus Footprint TCE Sync (tail/head/ls/grep on TCE pod log files for US-TTP / US-TTP2) and Footprint Megatron/Primus URL downloads from footprint.tiktok-row.net, redirect_log.html, or mljob-log-proxy URLs. Use when tasks mention log search, logid lookup, instance logs, log clustering, Footprint, footprint.tiktok-row.net, TCE log, tce_search_mode, Primus executor log, Megatron log, mljob-log-proxy, 看 pod 日志, or tail/grep TCE 容器内日志."
 ---
 
 # bytedcli Log
@@ -29,6 +29,8 @@ bytedcli <command> [options]
 - 按 LogID 查看 BytedTrace 调用树与节点延迟
 - 按环境 / 实例 / Pod 搜索日志
 - 查看日志聚类
+- Footprint TCE Sync pod 文件日志：`log footprint get`
+- Footprint / Primus / Megatron 日志 URL 下载：`log footprint download`
 
 ## 前置条件
 
@@ -192,7 +194,8 @@ bytedcli log get-log-cluster "psm.name" --start "2026-02-02T08:00:00" --kv-filte
 - 如果 agent 需要理解 `log analysis performance` 完整结果的字段语义，先看 `references/log.md` 里的“完整结果 JSON 关键字段语义”，不要只靠字段名猜测 `cost_in_us`、`called_percentage`、`analysis_span_histogram` 等含义
 - `trace-tree` 默认把完整 trace JSON 保存到本地临时文件；可用 `--output-file` 指定路径；stdout 固定返回 summary preview，不支持 stdout JSON
 - `trace-tree` 遇到 `others` / merge span 聚合导致下游挂载不稳定时，可能补充 `[raw]` 预览子节点；更精确的 parent-child 关系以保存下来的完整 payload 为准
-- `--vregion` 默认值按站点不同：`cn` 为 `China-North`，`boe` 为 `China-BOE`，`i18n`/`i18n-bd` 为 `Singapore-SaaS`，`i18n-tt` 为 `Singapore-Central`，`us-ttp`/`us-ttp-bdee`/`us-ttp-usts` 为 `US-TTP`。该参数决定服务端在哪个区域的日志存储中查询，传错区域会导致查到空结果而非报错。常见 vregion 值：`China-North`、`Singapore-SaaS`、`Singapore-Central`、`US-East`、`US-TTP`、`US-TTP2`、`China-BOE`、`US-BOE`、`EU-Compliance2`、`EU-Compliance`、`EU-TTP`、`EU-TTP2`、`US-EastRed`
+- `--vregion` 默认值按站点不同：`cn` 为 `China-North`，`boe` 为 `China-BOE`，`i18n`/`i18n-bd` 为 `Singapore-SaaS`，`i18n-tt` 为 `Singapore-Central`，`us-ttp`/`us-ttp-bdee`/`us-ttp-usts` 为 `US-TTP`。该参数决定服务端在哪个区域的日志存储中查询，传错区域会导致查到空结果而非报错。常见 vregion 值：`China-North`、`Singapore-SaaS`、`Singapore-Central`、`US-East`、`US-EastBD`、`US-TTP`、`US-TTP2`、`China-BOE`、`US-BOE`、`EU-Compliance2`、`EU-Compliance`、`EU-TTP`、`EU-TTP2`、`US-EastRed`
+- `--site i18n-bd --vregion US-EastBD` 会路由到 US-EastBD 专用 logservice（`logservice-us-eastbd.byted.org`），JWT 继续使用 `i18n-bd` 站点凭证，BCGW vregion/header 与请求体保留用户传入的 vregion。
 - `--vregion US-TTP`（别名 `usttp`、`ttp-us`、`ttp-us-limited`）会自动路由到 US-TTP 专用 logservice（`logservice-tx.tiktok-us.org`，对应 `useast5`），JWT 获取走 `cloud-ttp-us.bytedance.net`
 - `--vregion US-TTP2`（别名 `usttp2`、`ttp-us2`）会路由到 US-TTP2 专用 logservice（`logservice-tx2.tiktok-us.org`，对应 `useast8`），与 US-TTP 是独立的 vregion；JWT 同样走 `cloud-ttp-us.bytedance.net`
 - `--vregion US-BOE`（BOE 的 boei18n 分区）会路由到 `logservice-boei18n.byted.org`，JWT 从 `cloud.bytedance.net`（bytedance SSO）获取，与 China-BOE 的 `logservice-boe.byted.org` + `cloud-boe.bytedance.net` 不同。使用方式：`bytedcli --site boe log search-psm-log --psm demo.psm --vregion US-BOE ...`（传错 China-BOE 分区会报 `vregion ... is not in the same site/partition`，error_code=101400）
@@ -207,24 +210,31 @@ bytedcli log get-log-cluster "psm.name" --start "2026-02-02T08:00:00" --kv-filte
 - **沙箱环境优先使用 `--output file`**：在沙箱环境（如 Trae IDE）中，`--output console` 可能因输出缓冲或权限限制导致结果不显示，建议使用默认的 `--output file`。
 -
 
-## Footprint (TCE Sync)
+## Footprint (TCE Sync + Megatron URL Download)
 
-`log footprint get` 封装 `footprint.tiktok-row.net` 的 TCE Sync 日志查看 API，直接在指定 TCE pod 的容器内本地文件系统上按 `--mode` 选择 `tail` / `head` / `ls` / `grep`。它与上面的 `log search` / `log get-logid-log` / `log trace-tree` 等命令查的是不同来源：前者是已采集进 BytedLog 的日志库，后者是 pod 当前还在写的原始日志文件。
+`log footprint get` 封装 `footprint.tiktok-row.net` 的 TCE Sync 日志查看 API，直接在指定 TCE pod 的容器内本地文件系统上按 `--mode` 选择 `tail` / `head` / `ls` / `grep`。
+
+`log footprint download` 封装 Footprint 的 Megatron 日志下载模型，输入 Footprint 页面 URL、Primus `redirect_log.html` URL 或直接的 `mljob-log-proxy` 文件 URL，解析出最终 `applicationId` 后调用 `search-log` 与 `download-log` 下载内容。它适合 Primus/Megatron executor 日志、EU-TTP Footprint 页面、以及长 executor pod 名导致 TCE Sync 报 `search keyword is too long` 的场景。
+
+它们与上面的 `log search` / `log get-logid-log` / `log trace-tree` 等命令查的是不同来源：BytedLog 查询的是已采集日志库；Footprint TCE Sync 查 pod 文件系统；Footprint Megatron URL 下载查页面内嵌的 mljob-log-proxy 文件。
 
 ### 什么时候用 Footprint
 
 - 想看某个具体 pod 当下还在写的最新日志、还没被采集滚动归档的内容 → 用 `log footprint get --mode tail` / `--mode grep`
 - 已知 logid / trace_id、想跨 pod 查已采集字段 → 还是用前文的 `log search` / `log get-logid-log`
 - 想看 pod 上 `/var/log/tiger` 目录下有哪些文件、各自多大 → `log footprint get --mode ls`
+- 用户给的是 Footprint 页面、Primus `redirect_log.html`、或 `mljob-log-proxy` 直链，尤其是 Primus/Megatron executor 日志 → 用 `log footprint download --url <url>`
 
 ### 支持的 region
 
-| `--region` 取值 | 页面 idc | backend 字段 `idc` |
-| --- | --- | --- |
-| `us-ttp`（别名 `ttp`） | US-TTP | `ttp` |
-| `us-ttp2`（别名 `ttp2`） | US-TTP2 | `ttp2` |
+| `--region` 取值          | 页面 idc | backend 字段 `idc` |
+| ------------------------ | -------- | ------------------ |
+| `us-ttp`（别名 `ttp`）   | US-TTP   | `ttp`              |
+| `us-ttp2`（别名 `ttp2`） | US-TTP2  | `ttp2`             |
 
 CLI 暴露 `--region`（对齐仓库标准 flag），内部映射成 Footprint 后端的 `idc` 字段。其它机房暂未接入。
+
+`log footprint download` 使用 `--region`（可省略，优先从 URL 推断），支持 `US-TTP` / `ttp` / `usttp` → `ttp`，`US-TTP2` → `ttp2`，`EU-TTP` / `euttp` → `eu_ttp_no1a`，`EU-TTP-GCP` / `euttp-gcp` → `eu_ttp_gcp`，`EU-TTP-USEAST2A` → `eu_ttp_useast2a`，`EU-TTP-USEAST2B` → `eu_ttp_useast2b`。
 
 ### Usage
 
@@ -243,10 +253,16 @@ bytedcli log footprint get --mode grep --region us-ttp --psm example.service.ran
 
 # Agent 调用统一加 --json
 bytedcli --json log footprint get --mode tail --region us-ttp --psm example.service.rank --pod dp-xxx --file app.log
+
+# Primus/Megatron URL 型下载：Footprint 页面、redirect_log.html 或 mljob-log-proxy 直链
+bytedcli log footprint download --url 'https://footprint.example/?applicationId=https%3A%2F%2Fmljob-log-us-proxy.example%2Fyodel-logs%2Fproxy%2Fdemo%2Frunner.log&idc=US-TTP'
+bytedcli log footprint download --url 'https://mljob-log-eu-proxy.example/yodel-logs/proxy/demo/runner.log' --region EU-TTP-GCP --start '100-200' --output ./demo-runner.log
+bytedcli --json log footprint download --url 'https://mljob-log-us-proxy.example/yodel-logs/proxy/demo/runner.log' --start '-200'
 ```
 
 ### Footprint Agent Guidance
 
+- 用户只说 Footprint、给出 `footprint.tiktok-row.net` 页面、Primus `redirect_log.html`，或 `mljob-log-proxy` 直链时，直接使用 `bytedcli log footprint ...`；当前 CLI 入口不是顶层 `bytedcli footprint`。
 - `--mode` 必填，取值仅 `tail` / `head` / `ls` / `grep`，1:1 映射后端 `tce_search_mode`。
 - 默认日志路径 `/var/log/tiger`，绝大多数 TCE pod 都用这个；除非用户明确给了 `--path`，否则不要自己改。
 - `--mode tail` / `head` / `grep` 必填 `--file`；`--mode ls` 不接受 `--file`（要看具体文件请改用 tail/head）。
@@ -254,6 +270,9 @@ bytedcli --json log footprint get --mode tail --region us-ttp --psm example.serv
 - `--pattern` 的值会被**单引号包裹**后送到远端 `grep '<pattern>' | tail -n N`，因此 `|`、`;`、`&`、`$`、`<`、`>`、括号、花括号、双引号、反引号、空格都会被原样传给远端 grep（用来匹配 HTML 标签、价格、bash 片段、含管道符的日志等都没问题）。CLI 只拒绝会破坏单引号包裹本身的字符：`'`、`\`、`\n`、`\r`。需要在 pattern 里放单引号或换行时，让用户分多次 grep。
 - Footprint 后端对所有 mode 的行数都有 2000 上限：`tail -n`/`head -n` 服务端会报 `tail: limit exceeded (max 2000)` / `head: limit exceeded (max 2000)`；CLI 在 tail、head、grep 上都把 `--lines` 上限统一卡在 2000（超过直接抛 `FOOTPRINT_INPUT_ERROR` 不发请求），需要更多日志请分多次串行查询。
 - 文本输出按 `currentLine` 顺序逐行打印 `matched_pattern`；JSON 输出额外带 `mode`、`region`、`unique_search_id`、`status`、`line_count` 等元信息字段。
+- `log footprint download` 支持从 Footprint query 的 `applicationId` / `logUrl` / `originUrl` / `url` 提取 mljob-log-proxy URL，也支持 Primus `redirect_log.html` query 的 `originUrl` / `url`。若 URL query 里 `file` 双重 encode 了 `&pod_name=...&start=...`，CLI 会修复成最终 mljob-log-proxy query。
+- `log footprint download --start` 支持 `0`、`100-`、`100-200`、`-200`，并写入最终 resolved mljob-log-proxy URL query；命令行 `--start` 会覆盖 URL 里已有的 `start`。
+- `log footprint download --json` 成功输出包含 `input_url`、`resolved_url`、`source`、`idc`、`start`、`byte_count`，未指定 `--output` 时包含 `content`（大内容会截断并带 `content_truncated`），指定 `--output` 时包含 `output_file` 且不输出日志正文；不会输出 cookie/JWT/token。
 - 鉴权失败常见原因：当前账号没有 Footprint 访问权限，或某一侧 SSO session 过期。Footprint 横跨两套 SSO realm（`sso.tiktok-intl.com` + `sso.bytedance.com`），CLI 首次调用会驱动 i18n / tx 两条 cloud-X JWT 链和 footprint 自身的 `/api/login` CAS 回跳链来补齐 `bd_sso_3b6da9` + `titan_passport_id` + `api_sid` cookie。两个 jar 都必须有：报错时先让用户跑 `bytedcli auth status`；缺哪侧就补哪侧：tiktok 侧 `bytedcli --site i18n-tt auth login --session`，bytedance 侧 `bytedcli auth login --session`，再重试命令。
 
 ## References

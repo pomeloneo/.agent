@@ -43,9 +43,22 @@ bytedcli <command> [options]
 | `cn`    | 国内（默认）  | data.bytedance.net          | `default`   | 默认（`--site cn`）  |
 | `sg`    | Singapore ROW | dataleap-sg.tiktok-row.net  | `alisg`     | **`--site i18n-tt`** |
 | `va`    | us-east       | dataleap-va.tiktok-row.net  | `i18n`      | **`--site i18n-tt`** |
-| `mycis` | MYCIS         | dataleap-mycis.byteintl.net | `mycis`     | **`--site i18n-bd`** |
+| `mycis` | MYCIS         | dataleap-mycis.byteintl.net | `pinnacle`  | **`--site i18n-bd`** |
 
-> 其它区域（例如 `gcp`）尚未抓到真实 payload，暂不开放。早期曾凭 URL 路径前缀猜 va 的 `body.region` 是 `"va"`，实际值是 `"i18n"` —— 这是"看 URL 猜映射"最直接的教训。新增区域前请先在 DataLeap web 端抓一次 `CreateClickhouseTable` 请求，确认 `body.region` 的真实值，再更新 `src/api/clickhouse/site.ts`。
+> 其它区域（例如 `gcp`）尚未抓到真实 payload，暂不开放。早期曾凭 URL 路径前缀猜 va 的 `body.region` 是 `"va"` 实际值是 `"i18n"`，mycis 也被错估为 `"mycis"` 实际值是 `"pinnacle"` —— 这是"看 URL 猜映射"最直接的教训。新增区域前请先在 DataLeap web 端抓一次 `CreateClickhouseTable` 请求，确认 `body.region` 的真实值，再更新 `src/api/clickhouse/site.ts`。
+
+## `--region mycis` 必填项（务必看）
+
+DataLeap mycis web 表单要求填写 4 个业务标签，缺一会被网关 `x-gw-exec-mode: async` 模式静默吞掉（响应 `code:0` 但元数据并未入库）。CLI 已在前置校验里强制要求，缺失时直接报 `CLICKHOUSE_INPUT_ERROR` 并附可复制 hint：
+
+| 参数                            | 含义     | 示例占位                  |
+| ------------------------------- | -------- | ------------------------- |
+| `--alias <text>`                | 资产中文别名 | `demo-alias`           |
+| `--business-line <line>`        | 业务线   | `demo-business-line`      |
+| `--data-layer <layer>`          | 数据分层 | `demo-data-layer`         |
+| `--storage-strategy <strategy>` | 存储策略 | `demo-storage-strategy`   |
+
+另外 mycis 后端校验 `--shard-key` / `--primary-key` / `--sample-key` 时**只接受纯列名**，不接受 `cityHash64(...)` / `sipHash64(...)` 这类哈希表达式（即便源表 `Distributed` engine 元数据里展示的是 hash 表达式），否则会得到 `unknown shard key column: cityHash64(<col>)` 这类错误。把哈希包裹去掉、传纯列名重试即可。
 
 ## --site 与 --region 的搭配（必看）
 

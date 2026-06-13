@@ -1,6 +1,6 @@
 ---
 name: bytedance-volcano
-description: "Skill for Volcano Engine (火山引擎) CLI operations. Use when tasks mention Volcano Engine, veFaaS, VKE, VPC, TLS, CR, TOS, or DBW (Database Workbench) database instances/databases/tables/SQL execution."
+description: "Skill for Volcano Engine (火山引擎) CLI operations. Use when tasks mention Volcano Engine, Ark (火山方舟) foundation models / inference endpoints / API keys, veFaaS, VKE, VPC, TLS, CR, TOS, or DBW (Database Workbench) database instances/databases/tables/SQL execution."
 ---
 
 # Volcano Engine (火山引擎)
@@ -19,6 +19,7 @@ bytedcli <command> [options]
 ## When to use
 
 - 需要操作 Volcano Engine (火山引擎) 资源
+- 需要在 Volcano Ark (火山方舟) 控制台中查询基础模型 (foundation models)、推理接入点 (inference endpoints / 模型接入点) 或 API key（含查看明文）
 - 需要查询或管理 veFaaS 函数/实例/日志
 - 需要管理 VKE 集群/节点池
 - 需要查询 VPC、NAT 网关、子网、安全组等网络资源
@@ -52,6 +53,7 @@ bytedcli volcano auth status
 
 ## 功能分组
 
+- **Ark (火山方舟)**：`bytedcli volcano ark model list`、`endpoint list`、`api-key list`、`api-key get --reveal`。仅支持 Babi SSO session 鉴权，不支持 AK/SK；先 `volcano auth login --volc-account-id <id>`。
 - **DBW (Database Workbench)**：`references/volcano-dbw.md`
 
 ## Notes

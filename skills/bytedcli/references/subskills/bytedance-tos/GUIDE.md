@@ -69,6 +69,9 @@ bytedcli tos upload-object --bucket-id 123 --file ./sample.txt --key datasets/sa
 # 指定目录前缀，对象名仍取本地文件名
 bytedcli tos upload-object --bucket-id 123 --file ./sample.txt --prefix datasets
 
+# i18n-tt US-East/maliva bucket：必须显式传全局 vregion/vdc
+bytedcli --site i18n-tt --vregion US-East --vdc maliva tos upload-object --bucket-id 123 --file ./sample.txt
+
 # 申请记录（apply/toaudit）
 bytedcli tos list-records --status apply --record-type 1 --page 1 --size 5
 bytedcli tos list-records --status toaudit --page 1 --size 5
@@ -86,6 +89,7 @@ bytedcli --site i18n-bd tos list-starred-buckets --page 1 --size 5
 - `get-object-url` 默认输出内网下载地址；如需办公网地址可传 `--type office`，两种都要可传 `--type both`
 - `delete-object` 是破坏性操作，必须传 `--yes`
 - `upload-object` 会覆盖同名对象；需要自定义对象名时使用 `--key`，只想指定目录时使用 `--prefix`
+- i18n-tt 的 US-East/maliva TOS bucket 需要同时传 `--site i18n-tt --vregion US-East --vdc maliva`，bytedcli 会走 maliva 网关；只传 `--site i18n-tt` 会继续打默认控制面，可能出现 bucket not found
 - 默认文本模式；结构化输出加 `--json`（全局选项，放在子命令之前，如 `bytedcli --json tos list-starred-buckets ...`）
 - 环境切换使用 `--site`（或 `BYTEDCLI_CLOUD_SITE`）
 

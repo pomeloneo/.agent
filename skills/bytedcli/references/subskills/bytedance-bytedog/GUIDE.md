@@ -1,9 +1,9 @@
 ---
 name: bytedance-bytedog
-description: "Access ByteDog performance profiling and diagnostics via bytedcli and ByteDog API: CPU flamegraph (cpp/java/python) for TCE/K8s/machine/bytefaas/yarn, jemalloc memory flamegraph (enable/profile/download .fold), off-CPU flamegraph (IO/lock/sleep wait), Java profiling (gc/heap/thread/stack/lock/memory), IO profiling, GDB debugging, eBPF scripts, hardware profiling, alerts, benchmark, BizView, GlobalView, DiskView, and more. Use when tasks mention flamegraph, CPU profiling, memory profiling, jemalloc, off-CPU, lock contention, IO wait, perf, ByteDog, performance diagnostics, or profiling."
+description: "Use whenever users mention ByteDog, bytedcli bytedog, flamegraphs, CPU profiling, continuous profiling, jemalloc, off-CPU, pthread or lock contention, PID lookup, profile result download, or performance diagnostics"
 ---
 
-# ByteDog — Performance Profiling & Diagnostics
+# ByteDog (`bytedcli bytedog`) — Performance Profiling & Diagnostics
 
 ## 如何调用 bytedcli
 
@@ -21,111 +21,41 @@ bytedcli <command> [options]
 - 使用 `npx` 时，把后文示例里的 `bytedcli` 替换成 `NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest`
 - 已全局安装时，直接按后文示例执行 `bytedcli ...`
 
-## When to use
-
-- CPU 火焰图采集与分析（C++/Java/Python）
-- **jemalloc 内存火焰图**（`bytedog memory-flamegraph`）：当怀疑内存泄漏、RSS 持续增长、或 RSS 与 QPS 解耦时，对 TCE pod 上的目标进程做增量 jemalloc profile，采集分配热点堆栈。流程：`processes` 列 pid → `enable` 激活 jemalloc profile → `profile` 采集 → `get` 轮询 → `download` 拉取 `.fold` 文件。进程需链接 ste 维护版本 jemalloc。
-- **off-CPU 火焰图**（`bytedog offcpu-flamegraph`）：当 p99 飙升但 CPU 未饱和时，对 TCE pod 做 off-CPU 采样（锁等待、IO 等待、sleep 等），定位延迟来源。流程：`processes` 列 pid → `create --pids <csv> --duration 30` → `get` 轮询 → `download` 拉取 `.fold` 文件。US-TTP 默认 `tools_type=bytekd`。
-- Java 性能诊断（GC/Heap/Thread/Stack/Lock/Memory）
-- IO 性能分析与回放
-- GDB 远程调试
-- eBPF 脚本执行
-- 硬件性能分析
-- 告警管理（Argos/Vela）
-- BizView/GlobalView/DiskView 分析
-- 性能基准测试
-
 ## 前置条件
 
 - 使用通用调用方式：`../../invocation.md`
-- ByteDog API 需要 ByteCloud JWT 认证：`references/auth.md`
+- ByteDog 需要 ByteCloud JWT 认证：`references/auth.md`
+- `bytedcli bytedog` 命令参数: `references/profile-tool-command-reference.md`
 
-> 执行前缀见 `../../invocation.md`；下面示例直接写 `bytedcli`。
+## When to use
 
-## End-to-End Flamegraph Workflow
+- 获取或解析已有 ByteDog detail URL 的 profiling 结果，使用 `bytedcli bytedog profile get`。
+- 创建 profiling 任务前需要确认目标进程、PID、RSS、CPU、命令行时，先用 `bytedcli bytedog tool process list`。
+- `bytedcli bytedog profile oncpu create`：用于 CPU 忙、CPU 使用率高、需要定位 C++/Go/Rust/Java/Python 热点函数或调用栈时；如果只想采某个进程，先拿 PID 再传 `--pid`。
+- `bytedcli bytedog profile sprofile create`：用于需要机器维度的 continuous profiling、长时间 CPU 画像、历史时间窗口或难以稳定复现的 CPU 问题；该命令只支持 `--ip` 目标。
+- `bytedcli bytedog profile offcpu create`：用于 p99/RT 飙升但 CPU 未饱和、怀疑线程卡在 IO wait、sleep、futex、调度等待或阻塞调用时；需要明确 PID。
+- `bytedcli bytedog profile pthread create`：用于怀疑 pthread mutex/rwlock 等用户态锁竞争、锁等待或临界区争用导致延迟时；需要明确 PID。
+- `bytedcli bytedog profile je-stats create`：用于快速查看 jemalloc allocator stats，判断 RSS、arena/bin/tcache、碎片或分配状态是否异常；需要明确 PID。
+- `bytedcli bytedog profile je-flamegraph create`：用于怀疑 jemalloc 内存泄漏、RSS 持续增长、分配热点不清楚，或需要按调用栈定位内存分配来源时；需要明确 PID，必要时先用 `bytedcli bytedog tool process list` 确认 `--process-name`。
+- 需要确认 `bytedcli bytedog` 命令参数、输出、限制或示例时，读 `references/profile-tool-command-reference.md`。
 
-See `references/flamegraph-workflow.md` for the complete automated workflow to create, poll, and retrieve flamegraphs.
+## 常用流程
 
-### Quick Example
+执行 ByteDog profile 任务时，常见的使用场景对应的流程文档：
 
-```bash
-# Step 1: Find which site the PSM lives on
-for site in cn i18n-tt ttp-us-limited ttp-eu; do
-  count=$(bytedcli --site $site tce instance list --psm <PSM> --env prod --page-size 1 --json 2>/dev/null \
-    | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d.get('data',{}).get('page_info',{}).get('total_count',0))" 2>/dev/null)
-  [ "$count" -gt 0 ] && echo "$site: $count pods"
-done
+| Workflow | Use for |
+| -------- | ------- |
+| `references/tce-on-cpu-profile-workflow.md` | 根据 TCE PSM + podname 定位实例，创建 on-cpu 火焰图并获取结果。 |
+| `references/profile-create-to-get-workflow.md` | 创建新的 profile 任务，等待完成并获取结果文件。 |
+| `references/profile-list-to-get-workflow.md` | 查询历史 profile 任务，选择 `detail_url` 并获取结果文件。 |
 
-# Step 2: Pick a pod
-bytedcli --site <site> tce instance list --psm <PSM> --env prod --page-size 5 --json
+## CLI Reference
 
-# Step 3: Create flamegraph (auth is handled automatically by bytedcli)
-bytedcli --site <site> bytedog flamegraph create --pod <pod_name> --idc <IDC> --type cpp --duration 30 --frequency 99 --json
+Before executing or recommending `bytedcli bytedog`, read `references/profile-tool-command-reference.md` for the full command matrix, common options, output shapes, limitations, and examples.
 
-# Step 4: Check status (wait ~40s for 30s sampling + processing)
-bytedcli --site <site> bytedog flamegraph get --id <task_id> --json
-
-# Step 5: View result
-# Console: https://<console_domain>/flamegraph/<task_id>
-```
-
-## API Reference
-
-ByteDog PSM: `data.system.ste_bytedog_api` (496 endpoints, all POST)
-
-Full API docs: https://cloud.bytedance.net/bam/rd/data.system.ste_bytedog_api/api_doc/show_doc
-
-### Lookup API schema
-
-```bash
-# Get request/response schema for any endpoint
-bytedcli bam method get --psm data.system.ste_bytedog_api --method <MethodName> --json
-```
-
-Method name format: PascalCase of HTTP method + path, e.g. `PostApiV2CpuFlamegraphTceCreate`.
-
-### API Categories
-
-See `references/api-reference.md` for the complete list of 496 endpoints.
-
-| Category | Path Pattern | Description |
-|----------|-------------|-------------|
-| CPU Flamegraph | `/api/v2/cpu/flamegraph/{tce,k8s,machine,bytefaas,yarn}/{create,list,detail}` | Create/list/detail flamegraph tasks |
-| Flamegraph Batch | `/api/v3/flamegraph/batch/{create,detail,draw,list,update}` | Batch flamegraph operations |
-| Java Profiling | `/api/v2/java/{gc,heap,lock,memory,stack,thread}/{create,detail,list}` | Java diagnostics |
-| IO Profiling | `/api/v3/io/{analyze,playback,record}/task/{create,detail,list}` | IO analysis & recording |
-| GDB | `/api/v3/gdbv2/task/{create,detail,list}` | Remote GDB debugging |
-| eBPF | `/api/v3/ebpf_script/task/{create,detail}` | eBPF script execution |
-| Hardware | `/api/v2/hardware/ada/{tce,k8s,machine}/{create,detail}` | Hardware performance counters |
-| Alerts | `/api/v2/alert/{argos,vela}/{create,delete,detail,list,update}` | Alert management |
-| BizView | `/api/v3/bizview/...` | Business-level CPU analysis |
-| GlobalView | `/api/v3/globalview/...` | Global CPU/lib analysis |
-| DiskView | `/api/v3/diskview/...` | Disk IO metrics |
-| Benchmark | `/api/v3/benchmark/{name/list,record/*}` | Performance benchmarks |
-| ByteKD | `/api/v3/bytekd/...` | Long-range profiling & timeline |
-| ByteLinter | `/api/v3/bytelinter/...` | Code performance linting |
-| Bash/CLI Tasks | `/api/v3/bash/task/*`, `/api/v3/cli/task/*` | Remote task execution |
-| Favorites | `/api/v3/favorite/{create,delete,detail,list,update}` | Saved tasks |
-| History | `/api/v2/history/{list,update}` | Task history |
-| Flamegraph PB | `/api/v3/flamegraph_protobuf/get` | Download protobuf flamegraph data |
-
-## Domains
-
-See `references/domains.md` for the complete domain mapping.
-
-**IMPORTANT**: Production API domains (`ste-bytedog-api*.byted.org`) are NOT reachable from office network. Always use **console domains** (`bytedog*.bytedance.net`) with `X-Jwt-Token` header for API calls.
-
-| Site | Console Domain (use this) | API Domain (prod network only) |
-|------|--------------------------|-------------------------------|
-| CN | `bytedog.bytedance.net` | `ste-bytedog-api.byted.org` |
-| BOE | `bytedog-boe.bytedance.net` | `ste-bytedog-api-boe.byted.org` |
-| I18N | `bytedog-i18n.bytedance.net` | `ste-bytedog-api-i18n.byted.org` |
-| I18NBD | `bytedog.byteintl.net` | `ste-bytedog-api-i18nbd.byted.org` |
-| EU-TTP | `bytedog.tiktok-eu.net` | `bytedog.tiktoke.org` |
-| US-TTP | `bytedog-bd.tiktok-us.net` | `bytedog-usts.tiktokd.org` |
-| Volc | `bytedog-volc.bytedance.net` | — |
-
-## MCP Servers
-
-- CN: `https://cloud.bytedance.net/ai/mcp_server/5ayursv4/tools?x-resource-account=public&x-bc-region-id=bytedance`
-- ROW: `https://cloud-i18n.bytedance.net/ai/mcp_server/pq9drqch/tools?x-resource-account=i18n&x-bc-region-id=bytedance`
+| Command | Use for |
+| ------- | ------- |
+| `bytedcli bytedog profile get` | Get profile results from existing ByteDog detail URLs and generate `data-format.md`. |
+| `bytedcli bytedog profile <oncpu/sprofile/offcpu/pthread/je-stats/je-flamegraph> create` | Submit new profiling tasks and return detail URLs. |
+| `bytedcli bytedog profile <oncpu/sprofile/offcpu/pthread/je-stats/je-flamegraph> list` | Search historical profiling tasks and detail URLs. |
+| `bytedcli bytedog tool process list` | List target processes before creating PID-scoped profiling tasks. |

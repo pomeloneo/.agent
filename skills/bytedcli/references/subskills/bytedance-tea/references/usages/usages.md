@@ -6,6 +6,8 @@ TEA (DataFinder) 通过 OpenAPI 提供数据查询能力，查询条件采用 DS
 
 本文档说明Agent如何动态加载事件分析的必要信息（包括业务事件和其属性、公共事件属性、公共用户属性，按需动态获取属性枚举值），动态构建 DSL，用于 TEA 数据查询和复杂分析。
 
+> **先看是否需要手写 DSL：** 大多数数据问题不必手搓 DSL——`bytedcli tea analysis <model>` 把 7 个分析模型（event/funnel/retention/composition/path-find/life-cycle/distribution）封装成语义化子命令，直接传事件名、指标、过滤、分组等显式 option，CLI 自动构造 DSL 并投递 `/analysis`。**优先用 `tea analysis`（用法见 `SKILL.md`）；只有需要多层组合指标、特殊 option 等 `tea analysis` 覆盖不到的复杂场景，才按本文档进入手写 DSL 流程。**
+
 ### 知识库目录结构
 
 存储位置：`${CWD}/tea/`。**由Agent动态构建，用户无需手动维护。Agent定期检查MD文件格式并修复错误。**
@@ -547,7 +549,7 @@ A*(B/C)
   "source": "finder"
 }
 ```
-当 `use_sample_data` 为 `true` 时，会使用样本数据进行查询，而不是真实数据，只在查询时间过长时用于探测查询是否正确。
+当 `use_sample_data` 为 `true` 时，会使用样本数据进行查询，而不是完整数据，只在查询时间过长时用于探测查询是否正确。
 
 ## 5. 知识库属性映射到 DSL
 

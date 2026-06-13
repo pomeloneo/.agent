@@ -6,7 +6,8 @@
 
 - `--site cn|boe|i18n|i18n-tt|eu-ttp`：切换 ByteCloud 站点（影响请求 host + `x-bcgw-vregion`）
 - `--vregion`：同样影响 `x-bcgw-vregion`。访问 ChinaSinf-North（cnsinf）隔离基建 bucket 时必须传 `--vregion ChinaSinf-North`，命令会把 `x-bcgw-vregion` 设为 `cnsinf`；其他 vregion 维持各 site 的默认路由（如 cn 为 `default`）。否则路由仍是 default、访问该区域 bucket 会报 `bucket: not found`。
-- 全局 flag（`--site`/`--vregion`）放在 `tos` 子命令之前。
+- i18n-tt 的 US-East/maliva bucket 必须同时传 `--site i18n-tt --vregion US-East --vdc maliva`；bytedcli 会把 TOS API 请求路由到 maliva 网关。只传 `--site i18n-tt` 会访问默认控制面，US-East/maliva bucket 可能返回 not found。
+- 全局 flag（`--site`/`--vregion`/`--vdc`）放在 `tos` 子命令之前。
 - `tos list-sites`：从平台 meta API 拉取站点/VRegion 列表（best-effort，缓存 1 天）
 
 ## 命令
@@ -120,6 +121,9 @@ bytedcli tos upload-object --bucket-id 123 --file ./sample.txt --key datasets/sa
 
 # 上传到指定前缀，object key 为 datasets/sample.txt
 bytedcli tos upload-object --bucket-id 123 --file ./sample.txt --prefix datasets
+
+# 上传到 i18n-tt US-East/maliva bucket（全局 flag 在 tos 子命令之前）
+bytedcli --site i18n-tt --vregion US-East --vdc maliva tos upload-object --bucket-id 123 --file ./sample.txt --key datasets/sample.txt
 ```
 
 ### 9) tos list-records

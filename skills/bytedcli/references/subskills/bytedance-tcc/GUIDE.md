@@ -1,6 +1,6 @@
 ---
 name: bytedance-tcc
-description: "Operate TCC via bytedcli: list/search namespaces, list/get/decrypt configs, create/update/deploy configs, list directories, import base config, and inspect metadata. Use when tasks mention TCC or config center."
+description: "Operate TCC via bytedcli: list/search/get namespaces, list/get/decrypt/diff config versions, create/update/deploy configs, list directories, import base config, apply namespace permissions, and inspect metadata. Use when tasks mention TCC or config center."
 ---
 
 # bytedcli TCC
@@ -24,6 +24,8 @@ bytedcli <command> [options]
 ## When to use
 
 - Namespace/Config 查询
+- Namespace 详情查询
+- 配置版本查询与版本间 diff
 - 配置创建、更新、发布（通过 `--publish-mode` 控制发布策略）
 - 目录查询与基准配置导入
 
@@ -41,10 +43,14 @@ Commands are grouped under `tcc namespace`, `tcc config`, `tcc deployment`, `tcc
 bytedcli tcc site list
 bytedcli --site cn tcc namespace list --page 1 --size 50
 bytedcli --site cn tcc namespace search "keyword" --scope all --page 1 --size 50
+bytedcli --site cn tcc namespace get "namespace"
 bytedcli tcc config list "namespace" --region CN --keyword "demo" --dir-path "/default"
 bytedcli tcc config get "namespace" "config_name" --region CN --dir "/default"
 # View decrypted clear value for encrypted configs
 bytedcli tcc config get "namespace" "config_name" --region CN --dir "/encrypt" --decrypt
+bytedcli tcc config version list "namespace" "config_name" --region CN --dir "/default"
+bytedcli tcc config version get "namespace" "config_name" --ver 3 --region CN --dir "/default"
+bytedcli tcc config version diff "namespace" "config_name" --from-version 2 --to-version 3 --region CN --dir "/default"
 bytedcli --site i18n-bd tcc config dir list "namespace" --env ppe_xxx
 bytedcli --site i18n-bd tcc config meta list --env ppe_xxx
 bytedcli --site cn tcc config create "namespace" "config_name" --env ppe --region CN --dir "/default" --description "demo config" --data-type yaml --encrypted true --value "a: b"
@@ -81,9 +87,11 @@ bytedcli --site i18n-tt tcc permission apply "namespace" --role tcc.ns_operator 
 - 环境/region/dir 建议显式指定
 - `tcc config get` 支持 `--decrypt`，用于查看加密配置（`enable_encryption=true`）的明文值；不传 `--decrypt` 时加密配置只显示提示信息，不输出密文
 - `tcc config list` 支持 `--keyword` 和 `--dir-path`，分别按配置名关键字与目录路径筛选结果
+- `tcc config version diff` 按 namespace、config name、from/to version 直接输出两个配置版本的 unified diff；JSON 配置会先格式化再 diff，可用 `--context-lines` 调整上下文行数
 - `tcc deployment deploy` 支持 `--dir-path`，用于在同一 namespace 下存在同名配置时按目录锁定目标配置
 - `tcc deployment deploy` 在策略类型为 `feature` 时，`--env` 仅支持 `ppe`/`ppe_*` 或 `boe`/`boe_*`（例如 `ppe_demo`、`boe_demo`）
 - 使用全局 `--site` 选择站点（`cn|boe|i18n|i18n-bd|i18n-tt|us-ttp|eu-ttp`，别名：`prod` -> `cn`）。Per-service `--tcc-site` is a hidden alias for backward compatibility.
+- `tcc namespace get <namespace>` 查询 namespace 详情，返回 namespace id、owner/operator/viewer、regions、Bytetree 节点等控制台详情字段。
 - `tcc permission apply <namespace>` 申请 TCC namespace 权限：复用 TCC 控制台同款 `auth/bpm/create` 接口（走 `/api/v3/tcc/bcc/` 网关，不受 `iam permission apply` 在 i18n-tt 上遇到的 IAM 网关白名单限制）。命令会自动从 namespace 名解析 `ns_id` 和负责人（`rs_owners`），并按当前登录用户填申请人；工单路由给 namespace 负责人审批
   - `--access` 映射 TCC 角色：`read->tcc.ns_viewer`、`write->tcc.ns_operator`、`admin->tcc.ns_owner`；也可用 `--role` 直接指定角色（覆盖 `--access`）
   - `--approver <username...>` 覆盖默认负责人；`--username` 覆盖申请人；`--dry-run` 只打印请求体不提交

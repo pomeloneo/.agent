@@ -79,7 +79,7 @@ bytedcli <domain> --help
 - `fundeye`: fundeye 资金安全，对账平台，fullink / tcheck核对规则详情、差异、告警详情和列表。
 - `starling`: Starling 文案平台，通过 starling-cli proxy 提供全量能力；Shortcuts 覆盖项目、空间、翻译 Key、任务、译文、发布、文档项目、文档任务、工作流；API Runner 覆盖全部 OpenAPI；支持 RAG 搜索（`search docs/knowledge`）；`starling upgrade` 手动升级底层 starling-cli。
 - `cloud-docs`: 云文档搜索、业务列表、文档列表、Markdown 正文获取。
-- `meego`: OAuth 登录后的资源命令域，优先使用 URL 或资源化子命令，不要手拆 MCP tool 名；完整命令树见 `bytedance-meego` guide。常用入口有 `workitem`、`view`、`comment`、`chart`、`team`、`node`、`state`，URL 优先如 `comment list --url <workitem-url>`、`chart list --url <view-url>`、`view get --url <view-url>`、`workitem get --url <workitem-url>`，流转前置检查用 `state transition required get`，`array<string>` 类型原生参数除 JSON 外也支持单值、逗号或竖线分隔（如 `--user-keys foo,bar` 或 `--user-keys foo|bar`），非 JSON 模式优先输出表格，查评论、图表、团队、成员、排期时默认看文本模式即可。需要富文本详情（Quill Delta 转 Markdown、图片/附件下载 URL、linked_story 展开）时加 `--rich`，如 `meego workitem get --rich --url <issue-url>`；执行前先跑 `bytedcli auth login --session --feishu`，CLI 会复用保存下来的 Feishu Web session，通过纯 HTTP 链路换出 Meego goapi 所需 cookie。附件下载走 `meego workitem download-attachment --url <attachment-url> --output <dir>`，URL 从 `--rich` 输出的 description Markdown 里提取。工作项删除走 GoAPI：`meego workitem delete --url <workitem-url>` 或 `meego workitem delete --project-key <project-key> --work-item-id <id> --type story`，同样依赖 `auth login --session --feishu` 保存的 Web session。节点子任务删除走 GoAPI：`meego node subtask delete --project-key <project-key> --work-item-id <parent-id> --task-id <sub-task-id[,sub-task-id]>`。
+- `meego`: OAuth 登录后的资源命令域，优先使用 URL 或资源化子命令，不要手拆 MCP tool 名；完整命令树见 `bytedance-meego` guide。常用入口有 `workitem`、`view`、`comment`、`chart`、`team`、`node`、`state`，URL 优先如 `comment list --url <workitem-url>`、`chart list --url <view-url>`、`view get --url <view-url>`、`workitem get --url <workitem-url>`，流转前置检查用 `state transition required get`，`array<string>` 类型原生参数除 JSON 外也支持单值、逗号或竖线分隔（如 `--user-keys foo,bar` 或 `--user-keys foo|bar`），非 JSON 模式优先输出表格，查评论、图表、团队、成员、排期时默认看文本模式即可。需要富文本详情（Quill Delta 转 Markdown、图片/附件下载 URL、linked_story 展开）时加 `--rich`，如 `meego workitem get --rich --url <issue-url>`；执行前先跑 `bytedcli auth login --session --feishu`，CLI 会复用保存下来的 Feishu Web session，通过纯 HTTP 链路换出 Meego goapi 所需 cookie。附件下载走 `meego workitem download-attachment --url <attachment-url> --output <dir>`，URL 从 `--rich` 输出的 description Markdown 里提取。工作项删除走 GoAPI：`meego workitem delete --url <workitem-url>` 或 `meego workitem delete --project-key <project-key> --work-item-id <id> --type story`，同样依赖 `auth login --session --feishu` 保存的 Web session。节点子任务删除走 GoAPI：`meego node subtask delete --project-key <project-key> --work-item-id <parent-id> --task-id <sub-task-id[,sub-task-id]>`。issue view 排序和分组可显式设置：`meego view preference apply --project-key <project-key> --target-url <view-url> --group-fields priority,template,work_item_status --sorts priority:ASC`；从模板同步筛选/分组/排序用：`meego view preference apply-template --project-key <project-key> --template-url <template-view-url> --target-url <view-url> --filter merge --group replace --sort replace`。多排序用逗号分隔，建议先加 `--dry-run` 检查 diff。
 - `fornax`: prompt workspace、prompt 查询、创建、更新、发布，以及 experiment 创建、详情、results、aggr-results；experiment 额外支持 `fornax auth config/status` 配置 JWT 或 AK/SK。
 - `aime`: AIME space 列表/详情、session 创建/获取/列表/发送(附件上传，支持 `--site i18n-tt` 切 TikTok ROW 域名)、chat、interactive、DeepWiki。子组：`space`/`session`；旧的平铺命令保留为隐藏别名。
 - `tika`: Tika AI 对话、conversation、model、space。
@@ -94,7 +94,6 @@ bytedcli <domain> --help
 - `hive`: DataLeap 资产搜索、schema、lineage、partition、rows，以及 Hive 表创建与字段修改。
 - `oneservice`: OneService query 元信息、query version detail，以及按 queryId 自动解析当前 ONLINE version 后提取 SQL；当前覆盖 `meta get --id <queryId>`、`detail get --id <versionId>`、`sql get --id <queryId>`；鉴权依赖所选站点的浏览器 session cookie，默认 `cn` 使用国内 OneService 端点，`--site i18n-tt` 使用 i18n-tt OneService 端点，需先对目标站点执行 `auth login --session`。
 - `byterec-indexservice`: Byterec 索引服务、模型配置、XCenter 工具和 Viking DB 工具；当前覆盖 `byterec indexservice product get --psm <psm>`、`byterec indexservice config get --psm <psm>`、`byterec model list --namespace <ns> --keyword <kw>`、`byterec xcenter inspect-url`、`byterec xcenter api get/write`、`byterec xcenter data-center|feature-center|recall-center ...` 资源快捷命令、`byterec viking debug meta|recall|embedding`、`byterec viking database|model-db|data|pipeline|gdpr|sync ...` 资源命令，以及同组件在 Holmes 平台下的 `holmes indexservice proto list/create/get`、`holmes indexservice record get`。product/config 按 PSM 返回索引服务产品信息、拓扑、授权、配置常量与变量信息；`byterec model list` 用于在指定 namespace 下按 keyword 检索模型配置，并通过 `model_meta.vms_records[].serving_psm` 判断是否绑定 Viking serving；XCenter 与 Viking DB 写请求默认 dry-run，只有传 `--yes` 才提交；Viking raw API helper 仅允许 Viking DB allow-list path；Holmes 提供 proto 管理与 record 调试读取。record / group info 查询默认直接走 Holmes proto / record 链路；只有明确要求平台产品或配置上下文时才查 Byterec product/config。Byterec 控制面会跟随全局 `--site` / `BYTEDCLI_CLOUD_SITE` 自动路由：`i18n*` -> VA/SG，`us-ttp*` -> US，`eu-ttp` -> EU，`cn` -> CN；默认建议使用 `--site i18n-tt` 或 `BYTEDCLI_CLOUD_SITE=i18n-tt`，首次使用前按目标站点先执行 `bytedcli auth login --session --site <site>`。Holmes 侧首次使用前先 `bytedcli auth login --session`。若 Holmes record 查询阶段出现多个 `pb` / `pb-class` 候选，必须先用 `AskUserQuestion` 让用户明确选择，不能由 Agent 自行决定；若用户选择新建 proto，必须先向用户索取 proto 定义。
-- `recall-center` / `recallcenter`: Recall Center OpenAPI 生命周期命令；当前覆盖 `recall get/list/create/copy`、`config tree/get/create/update/delete`、`workflow compile/compile-sync/compile-log/compile-result/status`、`debug env/mock/drainage/drainage-status/drainage-case-status/ab-template/list-regions`、`publish check/submit`、`resource list-group/quota/scale-check/scale`、`traffic-pool get/list/list-parent/create/wait`、`alert get-receiver/set-receiver`。需要机器可读结果时用 `bytedcli --json recall-center --region <region> ...`；CN/BOE 机器调用 i18n 控制面时显式传 `--region i18n`。认证复用 bytedcli 全局 ByteCloud Auth，未登录时运行 `bytedcli --site <site> auth login`；请求面只走 `/openapi/...`，平台 `/api/...` 是 SSO session 面，不支持 JWT 鉴权，不能作为 fallback。默认编译走 `workflow compile-sync`，失败后补 `workflow compile-log`；`--dsl-file` 只是本地 dry-run，不会保存配置。写操作和发布/扩容/删除前必须确认用户意图，执行后回读或查状态闭环。
 - `clickhouse`: DataLeap CoralNG ClickHouse 建表（`create`：结构化字段 + 引擎参数，支持 HaMergeTree / HaUniqueMergeTree / CnchMergeTree 等，`--cluster-name` 不传时按 `--database` 自动反查）、改字段（`field update`：按 GUID 整表替换列 / 分区键 / 主键，默认非主键列自动包 `Nullable(...)`，可用 `--no-auto-nullable` 关闭）、改表级属性（`attr update`：按 GUID 修改 TTL / 描述 / owner / 业务联系人 / 权限管理员 / 安全等级 / 核心资产标记，未传的 option 保留原值）与库元信息查询（`db get`：返回 cluster / virtualWarehouse / owners / env）。
 - `aeolus`: dashboard/dataset 搜索、字段详情、SQL 查询、权限申请。
 - `life`: 生活服务生财有数平台的工具集；当前覆盖直播数据工作台的工具集 `life live-screen`，其中 `summary --room-id <room-id>` 用于获取核心指标、指标元数据与诊断文案，`user-info` 支持按主播 ID、主播抖音号、直播间 ID 或主播昵称获取用户信息。认证复用 `auth login --session --auto` 保存的 Data portal 浏览器会话。
@@ -111,21 +110,23 @@ bytedcli <domain> --help
 - `es`: Elasticsearch DSL 查询、mapping 查询与更新。
 - `cache`: Redis 服务搜索、慢日志、大 key、工单、命令执行。
 - `bmq`: Kafka topic 列表/详情、cluster 列表、consumer 列表、mirror 列表。子组：`topic`/`cluster`/`consumer`/`mirror`；旧的平铺命令保留为隐藏别名。
-- `eventbus`: Eventbus event、client、storage、mirror、producer、consumer 查询，消息查询与 PPE 消息发送；详细参数见 `bytedance-eventbus` skill。
+- `eventbus-cn`: Eventbus CN-only event、client、storage、mirror、producer、consumer 查询，消息查询；详细参数见 `bytedance-eventbus-cn` skill。
 - `tos`: bucket、用户信息（`get-user-info`）、用户记录、站点与 vregion。`user-info` 已重命名为 `get-user-info`，旧名保留为隐藏别名。
 - `dolphin`: 动态决策平台（事件、规则组、规则）查询与测试用例检查。子组：`event`（含 `event group`/`event var`/`event param`）/`group`（含 `group factor`/`group feature-env`/`group testcase`）/`rule`；旧的平铺命令保留为隐藏别名。
 - `safe`: 内容治理平台。认证（SSO 或 cookie 登录）、配置管理（tenant/business）、Puzzle 特征/实体/数据源/租户/包/集合、样本查询、Hawk scene/service/scope 元数据与 ops list/get 查询、Hawkpro trace、SafeMind model/graph/trace（含 test-node），以及 Digital Employee agent、图实例校验/更新、run-agent 试运行、仿真结果和批量仿真任务。子组：`puzzle`、`sample`、`hawk`（`service list` / `scope list` / `scene list` / `ops list|get`）、`hawkpro`、`safemind`、`eva`、`de` / `digital-employee`；`ds` 是 `datasource` 别名，`pkg` 是 `package` 别名。相关子命令支持 `--tenant` 选项，优先级：`--tenant` > `SAFE_TENANT` env > config > 默认 `ecology`。
 
 ## Runtime, logs, and observability
 
-- `cronjob`: 挂载、可用 zone、任务、执行记录、实例详情、重跑、debug。
-- `log`: PSM 日志、LogID 查询、按接口维度做 BytedTrace 总体性能分析（`analysis performance`）、按 `logId` 查看 BytedTrace 调用树（`trace-tree`）、实例日志、日志聚类。
+- `cronjob`: 挂载、可用 zone、任务、执行记录、实例详情、工单、发布、集群资源 / Argos、集群创建、暂停 / 恢复 / 删除、重跑、debug。
+- `log`: PSM 日志、LogID 查询、按接口维度做 BytedTrace 总体性能分析（`analysis performance`）、按 `logId` 查看 BytedTrace 调用树（`trace-tree`）、实例日志、日志聚类，以及 Footprint TCE Sync / Megatron URL 下载（入口为 `log footprint`，不是顶层 `footprint`）。
 - `archer`: 链路级覆盖率查询（按 PSM + traceId 查询流量级函数调用链路与覆盖行明细）。
 - `apm`: service preview、QPS、下游、Redis 监控。子组：`service`/`redis`；旧的平铺命令保留为隐藏别名。
+- `bytedog`: ByteDog profiling 与性能诊断、可创建、查询和列出常见的profiling（`<oncpu|sprofile|offcpu|pthread|je-stats|je-flamegraph>`）任务。
 - `slardar`: Slardar Web / App / OS 统一命令组。
   - `slardar web`: query assistant、告警 URL 分析、`alarm-rule-list`、`alarm-history`、JS Error、SOP 与 Investigation。
   - `slardar app`: Slardar App 工具集；`issue log` 支持从 Slardar App issue URL 拉日志，`issue log --symbolicate` 支持 Slardar retrace 与 native 栈符号化 fallback，`symbol url` 支持 `--build-id`、`--so-file` 或 `--uuid` 生成 native symbol uuid / symbol URL。
   - `slardar os`: Slardar OS 工具集；`issue log` 支持从 Slardar OS issue URL 拉取事件 summary，`issue log --symbolicate` 支持复用 Slardar App native symbol 能力解析主线程 native 栈。
+- `vela`: Vela one-machine 单机指标查询；当前覆盖 `one-machine query`，支持直接传 monitor-view URL，或通过 `--selected-name` / `--host`、`--cur-count`、`--time` 查询 VM 指标序列。
 
 ## Quick routing by artifact
 
@@ -140,6 +141,8 @@ bytedcli <domain> --help
 - `ml.bytedance.net/development/instance/jobs/...` 或 `seed.bytedance.net/development/instance/jobs/...`：`merlin job extract` / `merlin logs get`
 - `ml.bytedance.net/experiment/tracking/...` 或 `seed.bytedance.net/experiment/tracking/...`：`merlin tracking`
 - `reckon-*.tiktok-row.net/forge2/jobs/...`（Forge job/logs 页面 URL）：`forge logs --url <url>`
+- `footprint.tiktok-row.net`、Primus `redirect_log.html`、`mljob-log-proxy` 日志 URL：`log footprint download --url <url>`
+- Footprint TCE Sync / pod 本地日志文件 tail/head/ls/grep：`log footprint get`
 - TCE deployment / service / cluster 页面或 deployment id：`tce`
 - `pipo-bmt-sea.tiktok-row.net/bmt/...` 等 BMT 控制台 URL、service id、resource code、PSM：`bmt`
 - `cloud.tiktok-row.net/tae/...`、`/ai/mcp_server`、TAE MCP Server/Agent/Sandbox/Memory/Skill 页面：`bytedance-tae`
@@ -148,13 +151,14 @@ bytedcli <domain> --help
 - ABase2 namespace / table / online query：`abase`
 - Redis、slow log、big key：`cache`
 - ES index、mapping、DSL：`es`
-- Eventbus event、client、storage、mirror、producer、consumer、消息查询或 PPE 消息发送：`eventbus`
+- Eventbus event、client、storage、mirror、producer、consumer、消息查询：`eventbus-cn`
 - Hive 表、Dorado task id、报表 dataset：在 `hive` / `dorado` / `aeolus` 间选
 - OneService queryId、versionId、invoker_server SQL：`oneservice`
 - Byterec PSM、indexservice product/config 查询、XCenter 页面/API/资源：`byterec indexservice` 或 `byterec xcenter`
 - Byterec model/version、namespace 下模型列表查询：`byterec model list`
-- Recall Center recall 详情页、recall id、config id、workflow id、traffic suite/case、mock/drainage/publish/resource/quota 任务：`recall-center`
 - Slardar 告警页 URL：`slardar web analyze-alarm-url`
+- ByteDog profile detail URL、火焰图 / continuous profiling / off-cpu / pthread / jemalloc 任务：`bytedog profile get`、`bytedog profile <type> create/list`
+- Vela monitor-view one-machine URL / 单机 VM 指标：`vela one-machine query`
 - Android `.so` BuildID / native symbol：`slardar app symbol url`；Slardar App issue retrace/native 栈：`slardar app issue log --symbolicate`
 - Slardar OS issue URL / APK embedded native stack：`slardar os issue log --symbolicate`
 - `safe.bytedance.net/...` 特征/实体/数据源/租户/包/集合、SafeMind、Digital Employee 页面或标识：`safe`
@@ -187,7 +191,7 @@ bytedcli <domain> --help
 - “查我的请假 / 今天请了几天假 / 补请半天病假 / 申请 People 请假”：`people leave list` / `people leave apply`
 - “预览锦书消息 / 发送云锦书卡片”：`jinshu`
 - “查技术文章 / 内部知识 / AI 问答”：`insearch`、`bitsai`、`tika`、`aime`
-- “查 Eventbus event / client / storage / mirror / producer / consumer / 消息，或向 PPE 发 Eventbus 消息”：`eventbus`
+- “查 Eventbus event / client / storage / mirror / producer / consumer / 消息查询”：`eventbus-cn`
 - “搜索内部文档 / 查字节内部知识 / 搜飞书文档 / 搜 ByteCloud 文档”：`insearch`
 - “提取这个 Merlin job 的 YAML / 把这份 `trial.yaml` 重提到 `seed-cn` / 拉这个 Merlin trial 的 stdout/stderr / 看这个 tracking run 的 config 和 summary / 列出某个 project 下的 runs / 根据 Merlin job id 找 tracking 链接 / 查某个 trial 为什么还在排队”：`merlin`
 - “提交 Video AIPF 训练 / 查询 Helix 训练状态 / 停止 Video AIPF 评估 / 查 Helix 评估记录 / 提交 Video AIPF 数据准备”：`helix`
@@ -196,11 +200,11 @@ bytedcli <domain> --help
 - “跑 SQL / 查 schema / 看 lineage / 查报表字段”：`rds`、`hive`、`dorado`、`aeolus`、`dataq`、`tqs`
 - “查 ByteIO 埋点是否存在 / 校验埋点参数 / 查 ByteIO 需求、点位、BTM、测试用例、广告 tag/label”：`byteio`
 - “查 OneService 元信息 / 看 query version detail / 按 queryId 取 SQL”：`oneservice`
-- “查 recall / 改 Recall Center 配置 / 编译 recall / mock debug / drainage debug / 发布 Recall Center / 查资源池 quota / 迁移 recallcli 流程”：`recall-center`
 - "查 Safe 特征 / 实体 / 数据源 / 租户 / 包 / 集合 / 内容治理平台 / SafeMind / Digital Employee"：`safe`
 - “根据直播间 ID 看直播数据工作台 / GMV / 订单 / CTR / CVR / GPM”：`life live-screen summary`
 - “按主播昵称 / 主播 ID / 抖音号 / 直播间 ID 获取直播数据工作台用户信息”：`life live-screen user-info`
-- “查日志 / 指标 / 告警 / native symbol / Redis / ABase / Kafka”：`log`、`apm`、`slardar`、`cache`、`abase`、`bmq`
+- “CPU 高 / 采火焰图 / 分析 ByteDog profile 结果 / 查历史 profiling 任务 / 查 PID / off-cpu / pthread lock / jemalloc 内存分配”：`bytedog`
+- “查日志 / Footprint / footprint.tiktok-row.net / mljob-log-proxy / 指标 / 告警 / Vela one-machine / native symbol / Redis / ABase / Kafka”：`log`（Footprint 用 `log footprint`）、`apm`、`slardar`、`vela`、`cache`、`abase`、`bmq`
 
 ## Notes
 

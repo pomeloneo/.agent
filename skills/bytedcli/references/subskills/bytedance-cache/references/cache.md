@@ -18,6 +18,8 @@ bytedcli cache list-big-keys --psm "cache.demo" --date "2026-02-05" --start "00:
 bytedcli cache list-hot-keys --psm "cache.demo" --date "2026-02-05" --start "00:00:00" --end "23:59:59" --type read
 
 # 工单
+bytedcli cache update-permission --psm "cache.demo" --change-type allow --target "example.service.psm"
+bytedcli cache update-permission --psm "cache.demo" --change-type remove --target "example.service.psm" "demo.service.psm" --dry-run
 bytedcli cache list-my-tickets --psm "cache.demo"
 bytedcli cache list-service-tickets --psm "cache.demo" --page 1 --page-size 20
 

@@ -86,7 +86,7 @@ bytedcli ai-dev-pro afs psm agent-md get --help
 | 查询文件中包含的方法列表                        | `bytedcli ai-dev-pro afs code file method list --help`                                                                                                                                             |
 | 查询 MR 代码变更内容                            | `bytedcli ai-dev-pro afs code mr get --help`                                                                                                                                                       |
 | 根据自然语言检索可能相关的接口                  | `bytedcli ai-dev-pro afs interface search --help`                                                                                                                                                  |
-| 根据 PSM + 方法名或 method ID 查询接口详情      | `bytedcli ai-dev-pro afs interface list --help`                                                                                                                                                    |
+| 查询 PSM 下接口列表，并可按方法名或 method ID 精确筛选 | `bytedcli ai-dev-pro afs interface list --help`                                                                                                                                                    |
 | 查询接口出入参                                  | `bytedcli ai-dev-pro afs interface param get --help`                                                                                                                                               |
 | 查询接口下游调用                                | `bytedcli ai-dev-pro afs interface callee list --help`                                                                                                                                             |
 | 查询接口上游调用方                              | `bytedcli ai-dev-pro afs interface caller list --help`                                                                                                                                             |
@@ -100,6 +100,8 @@ bytedcli ai-dev-pro afs psm agent-md get --help
 
 ## 查询策略
 
+- 当用户明确是在寻找某个接口、接口方法或接口入参出参，而不是先寻找服务/PSM 时，加载 [references/scene_interface_discovery.md](references/scene_interface_discovery.md)，按“接口语义检索 → 接口确认 → 接口参数获取”的路径执行。
+- 当用户只提供业务功能语义、尚不知道具体 PSM，但希望定位承载服务及其接口时，加载 [references/scene_semantic_psm_interface_discovery.md](references/scene_semantic_psm_interface_discovery.md)，按“PSM 语义检索 → PSM 摘要确认 → PSM 内接口检索”的路径执行；仅当用户需要接口出入参信息，或需要根据出入参进一步筛选接口时，再查询接口参数。
 - 面对模糊的产品或实现问题，先用 `psm search`、`interface search`、`code search` 等发现类命令收集候选 PSM、方法名或 method ID。
 - 已知 PSM 和方法名时，优先使用 `interface list`、`interface param get`、`code get`、`psm idl get`、`psm readme get` 等精确读取命令。
 - 已知 method ID 或代码实体 ID 时，直接使用 ID 查询类命令，不要重复做语义检索。

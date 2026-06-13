@@ -53,6 +53,93 @@ bytedcli auth login --session
 3. CAS ticket 换取 Holmes 的 BDSSO session cookie（httpOnly）
 4. 后续请求自动携带 session cookie
 
+## TikTok Debug Video Detail / Batch
+
+TikTok Debug 视频页可以用 `holmes video` 命令读取，不需要打开浏览器。命令复用 Holmes BDSSO cookie，并用 `json-bigint` 解析响应，避免 item/user/music 等 64 位 ID 被普通 JSON 解析截断。
+
+### Constants & Defaults
+
+| 常量名                      | 默认值  | 含义                                                                                                       |
+| --------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `DEFAULT_BUSINESS`          | `"0"`   | 所有 video API 请求携带的 HTTP `business` header 值；非默认业务线的高级用户通过 `--business <value>` 覆盖。 |
+| `DEFAULT_REGION`            | `"SG"`  | 仅 `video get --include-index-service` 使用的默认 region（dc），传给旧版 `index_service` 查询参数。         |
+| `DEFAULT_BATCH_CHUNK_SIZE`  | `30`    | `video list` 每次 API 调用的 item 数；遇到瞬时错误时三个 collector 自动降级为 chunkSize=1 逐项重试。      |
+
+### Options Reference
+
+| 选项              | 适用命令   | 默认值  | 说明                                                                                                                                                                                                                                                  |
+| ----------------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--business`      | get + batch| `"0"`   | 每次 API 调用发送的 HTTP `business` header。影响 Holmes 内部的业务线路由。在非默认业务线账号调试时需覆盖为对应值（如 `"1"`、`"2"`）。                                                                                                                   |
+| `--model`         | batch only | `""`    | **纯元数据 flag**，不影响任何 API 调用。从 batch URL 的 `?model=` query string 解析，或手动传入；写入输出的 `data.source.model`，用于 provenance 追踪（复现某 batch 页面的 model 名）。                                                                   |
+| `--no-server-data`| get + batch| `false` | 跳过 `video_server_data` 采集器。`true`（即传 flag）时，CLI 不调用 `POST /api/debug/v2/video/video_server_data`，适合只看 profile 字段 / 快速返回 / 定位 server_data 缺字段问题的场景。默认 `server_data IS fetched`。                                      |
+| `--region`        | get only   | `"SG"`  | **仅 `video get` + `--include-index-service` 生效**。控制旧版 `GET /api/debug/index_service` 的 dc 查询参数。`profile` 和 `server_data` 端点不消费 region。batch 命令已**移除**该 flag。                                                                       |
+| `--chunk-size`    | batch only | `30`    | `video_profile_v2` / `video_server_data` / `batchGetVideoSimpleInfo` 每个 collector 单次请求的 item 数。遇到瞬时网络错误（如 code=2 "dial tcp ... i/o timeout"）时，三个 collector 会自动降级为 chunkSize=1 逐项重试，定位具体出错 item。                   |
+| `--include-raw`   | get + batch| `false` | 在 JSON 输出的 `data.raw` 中保留各端点原始响应 envelope。`video get` 结构：`data.raw = { profile_item, server_data_item, index_service }`（后者仅在 `--include-index-service` 时有值）。`video list` 结构：`data.raw = { detect, simple_info[], profile[], server_data[] }` — simple_info/profile/server_data 是 chunk 级响应片段数组，detect 是 tools/detect 的单次响应。 |
+
+### Detail
+
+```bash
+# 按 item id 查询基础信息
+bytedcli --json holmes video get --item-id <item_id> --region SG
+
+# 读取 detail 页面 URL；CLI 会从 URL 中取 item_id 和 region
+bytedcli --json holmes video get \
+  --url 'https://holmes.tiktok-row.net/tiktok-debug/tiktok/video/detail?item_id=<item_id>&region=SG'
+
+# 需要页面 Index Service tab 的 Push 信息
+bytedcli --json holmes video get --item-id <item_id> --region SG --include-index-service
+
+# 下载封面图
+bytedcli holmes video get --item-id <item_id> --region SG --cover-dir ./covers
+```
+
+默认链路：
+
+- `POST /api/debug/v2/video/video_profile_v2`，body 为 `{"item_id":["<item_id>"],"with_server_data":"true","save_query_history":true}`。
+- `POST /api/debug/v2/video/video_server_data`，body 为 `{"item_id":["<item_id>"]}`。
+- 加 `--include-index-service` 后额外调用旧版 `GET /api/debug/index_service?gid=<item_id>&region=<region>`，用于拿页面 Index Service / Push 数据。这个旧接口需要 Holmes `business: 0` header。
+
+JSON 输出重点字段：
+
+- `data.item`：归一化基础信息，含 `item_id`、`user_id`、`unique_id`、`nickname`、`content`、`create_time`、`duration_seconds`、`cover_image_url`、`media_url_list`、`stats`。
+- `data.index_service.push.data`：`--include-index-service` 时解析出的 Push 结果。
+- `data.cover_downloads[]`：`--cover-dir` 时的封面下载结果。
+- `--include-raw`：附带 profile/server/index 的原始响应片段，用于排查字段。
+
+### Batch
+
+```bash
+# 直接给 item id 列表
+bytedcli --json holmes video list --item-ids <item_id_1>,<item_id_2>
+
+# 给 batch 页面 video_ids 短 id；CLI 会先解码成 item id 列表
+bytedcli --json holmes video list --video-ids <short_id>
+
+# 直接给 Holmes batch 页面 URL
+bytedcli --json holmes video list \
+  --url 'https://holmes.tiktok-row.net/tiktok-debug/tiktok/video/batch?model=Default&video_ids=<short_id>'
+
+# 批量下载封面
+bytedcli holmes video list --video-ids <short_id> --cover-dir ./covers
+```
+
+batch 链路：
+
+1. `--video-ids` 或 `--url` 场景先调用 `POST https://holmes-cloud-server.cn.goofy.app/api/tools/get-short-str-v2`，body 为 `{"id":"<short_id>"}`，解析 `video,item_id,...`。
+2. 调用 `POST /api/debug/v2/tools/detect`，body 为 `{"item_ids":[...]}`。
+3. 调用 `POST /api/debug/v2/video/batchGetVideoSimpleInfo`，body 为 `{"itemIDs":[...]}`，拿批量卡片的 cover/simple info。
+4. 调用 `POST /api/debug/v2/video/video_profile_v2` 和 `POST /api/debug/v2/video/video_server_data` 补齐基础信息和 server data。
+
+注意事项：
+
+- batch 页面可能包含 `OGV...` 等非数字 id；`video_profile_v2` 会拒绝这类 id，CLI 会把它们放到 `skipped_item_ids`，继续处理数字 item。
+- `--business <value>`（默认 `"0"`）作为 HTTP `business` header 随每次 API 调用发送，与 get 命令一致。
+- `--model <model>` 是 batch 专用的元数据 flag：从 batch URL 的 `?model=` 解析或手动传入，仅写入 `data.source.model`，不影响任何 API 请求。
+- `--chunk-size <n>` 可控制 profile/server/simple info 的每批 item 数，默认 30；chunk 失败时（例如 code=2 "dial tcp ... i/o timeout" 这种瞬时网络错误），CLI 会降级为 chunkSize=1 逐条请求并把具体出错 item 写入 `failures[]`（stage 分别为 `profile_data` / `server_data` / `simple_info`）。
+- `--no-simple-info` 可跳过 `batchGetVideoSimpleInfo`；`--no-server-data` 可跳过 `video_server_data`（默认两者都会拉取）。
+- `--cover-dir <dir>` 会下载 `cover_image_url` 指向的封面；失败只记录在 `cover_downloads[]`/`failures[]`，不影响其他 item。
+- **hiding_status-only profile**：如果某个 item 的 profile 返回仅含 `{id, hiding_status}`（没有其余字段），CLI 判定为 `profile_data` 阶段失败，计入 `counts.failures`。
+
 ## TrustData SQL 查询与后续处理
 
 TrustData 查询通过 `holmes trust-data` 命令执行，默认使用 i18n Holmes 后端。CLI 请求体固定使用 BytedCLI platform；提交 SQL 时不需要传 `--repo-id` 或 `--data-source-type`，后端会处理 data source 与 repo 归属。`sql-submit` 会从 SQL 的 `FROM`/`JOIN` 中识别完整表名（如 `db.table`），先调用 i18n `get_table_info --active-only` 查询活跃表元数据并自动确定 `region`；如果只命中一个活跃 region，会自动带该 region 提交。如果返回多个活跃 region，交互式终端会提示选择；JSON/非 TTY 模式会返回 `HOLMES_TRUSTDATA_REGION_AMBIGUOUS`，需要显式传 `--region` 重跑。用户不需要额外传 `--site i18n`。

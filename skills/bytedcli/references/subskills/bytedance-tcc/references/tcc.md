@@ -4,12 +4,14 @@
 bytedcli tcc site list
 bytedcli --site cn tcc namespace list --page 1 --size 50
 bytedcli --site cn tcc namespace search "keyword" --scope all --page 1 --size 50
+bytedcli --site cn tcc namespace get "namespace"
 
 bytedcli tcc config list "namespace" --region CN --keyword "demo" --dir-path "/default"
 bytedcli tcc config get "namespace" "config_name" --region CN --dir "/default"
 bytedcli tcc config get "namespace" "config_name" --region CN --dir "/encrypt" --decrypt
 bytedcli tcc config version list "namespace" "config_name" --region CN --dir "/default"
 bytedcli tcc config version get "namespace" "config_name" --ver 3 --region CN --dir "/default"
+bytedcli tcc config version diff "namespace" "config_name" --from-version 2 --to-version 3 --region CN --dir "/default"
 bytedcli --site i18n-bd tcc config dir list "namespace" --env ppe_xxx
 bytedcli --site i18n-bd tcc config meta list --env ppe_xxx
 
@@ -35,6 +37,8 @@ bytedcli --site i18n-bd tcc config import "namespace" --config-ids "123,456" --t
 # config create/config update accept --encrypted true|false for Web V1 namespaces.
 # config update also falls back to the V2 service_id upsert API for
 # former_tcc / tcc_v2 namespaces, using the requested --region and --dir.
+# config version diff compares two explicit version numbers and outputs a unified diff.
+# JSON config data is formatted before diffing; use --context-lines to tune context.
 # former_tcc / tcc_v2 namespaces do not support --encrypted; the CLI fails fast
 # instead of silently ignoring the flag.
 # deployment deploy also switches former_tcc / tcc_v2 namespaces to the TCC AG V2

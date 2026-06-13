@@ -1,6 +1,6 @@
 ---
 name: bytedcli
-description: "Unified skill for bytedcli command surface. Use for ByteDance internal R&D and platform tasks where the agent should prefer bytedcli CLI, MCP, or bundled references over web UI or hand-written internal API calls. Covers auth/JWT, internal search/GET, Lark/Feishu collaboration, Codebase/MR/CI, Devflow, SCM, Lagrange Torch release and ICM images, cloud/runtime services, data/SQL platforms, observability, security/IAM/KMS, AI/dev tools, package and artifact lookup/publish, and skill/plugin/MCP startup and update flows."
+description: "Unified skill for the bytedcli command surface. Use when tasks involve ByteDance internal R&D platforms and the agent should prefer bytedcli through CLI, MCP, or bundled references instead of opening web pages or hand-writing internal API calls. Covers auth/tokens; insearch internal knowledge and authenticated internal GET; Feishu/Lark, Jinshu, Cloud Docs/Ticket/Kani, Lark Oncall; FundEye/Fullink/TCheck; Codebase, BAM, BITS, Devflow, SCM, AGW, Luban npm search and PyPI artifact publishing, Lynx, Overpass, Goofy; Fornax, Helix, Meego, AIME, Tika, Starling, TikTok Gecko, Holmes, Byterec; Live Trace; TCE/TCC/Spark Platform/ByteFlow/ENV/ByteCopy/TOS/FaaS/TAE/Volcano/ByteCloud/Bytetree/Netlink/Neptune/Settings/Kross; BMT, RDS, ByteHouse, ByteDoc, Merlin, Hive, Dorado, Blade, Oceanus, Aeolus, DataQ, TQS, Forge, ES, Cache, BMQ/RMQ; Cronjob, Log/Footprint, APM, Slardar, Codecov, Archer; DKMS, KMS v2, IAM; ByteStable WCC; MCP startup and update flows."
 ---
 
 # bytedcli
@@ -95,8 +95,9 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - SQL、数据库平台、数据资产、报表、离线任务：`rds`（子组：`db`/`slow`/`alert`/`ops`/`bpm`）、`bytedoc`、`hive`、`dorado`（子组：`project`/`task`/`instance`/`adhoc`）、`blade`（子组：`task`，当前支持 `task get` 和 `--region mycis`；鉴权优先复用 `blade.byteintl.net` 站点 cookie 与 fresh ByteCloud JWT）、`oceanus`（子组：`project`/`tree-node`/`node`/`task`）、`aeolus`、`dataq`、`tqs`、`forge`
   - 例子：”查我关注的 ByteDoc 数据库””看这个库的慢查询””执行一段 SQL””查这个 dashboard 对应的数据集”
   - 在 hive-sql 上进行语法检查、提交 sql 任务、获取状态和结果：`tqs`
-- Eventbus event 详情查询：`eventbus`
-  - 例子：“查这个 event 的详情”“确认 event 绑定了哪些 topic”“验证 eventbus OpenAPI 是否可用”
+- Eventbus CN-only event 详情查询：`eventbus-cn`
+  - 例子：“查国内 CN 这个 event 的详情”“确认 event 绑定了哪些 topic”“验证 eventbus OpenAPI 是否可用”
+  - 限定：仅支持国内 CN/BOE，i18n、US、EU 用户不支持该 skill
 - BMT 多租户服务、标签、资源、隔离集与 user role 查询：`bmt`
   - 例子：“按 PSM 反查 BMT service”“看这个 PSM 绑定了哪些 RDS 或 RocketMQ 资源”“查某个 BMT resource code 对应的连接信息”
 - 查询 Forge 任务日志：`forge logs`
@@ -108,8 +109,6 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
   - 例子：“查这个 TBase product 的配置”“列某个产品的字段”“给 TBase 新增字段提审”“按 row key 查多字段或 all-fields”
 - Byterec index service 产品信息、配置、模型配置列表、Viking DB 调试/资源查询，以及同组件在 Holmes 平台下的 proto / record 调试：`byterec indexservice` / `byterec model list` / `byterec viking` / `holmes indexservice` / `bytedance-byterec-indexservice`
   - 例子：“查这个 Byterec indexservice 的 product 信息”“按 PSM 看 Byterec config”“列 Byterec 某个 namespace 下的模型列表/版本”“判断模型是否绑定 Viking serving”“执行 Viking DB DSL recall”“查看 Viking DB database/model”“列 Holmes IndexService proto”“按显式参数读一条 IndexService record”
-- Recall Center recall 版本、配置、编译、debug/mock/drainage、发布、资源池、流量池和告警接收人：`recall-center` / `recallcenter` / `bytedance-recall-center`
-  - 例子：“查这个 recall 版本”“更新 Recall Center 配置并编译”“跑 mock debug / drainage debug”“发布前检查”“查资源池 quota”
 - Merlin job 提交和从中抽取 YAML 描述，Merlin job run 列表与 job->trial 解析，Merlin trial diagnose/local-log，Merlin job/trial 的 stdout/stderr 日志查询，Merlin tracking project、run、metrics 和 job 链接读取，`merlin` 计算资源 quota 的 group、cluster 只读查询：`merlin`
   - 例子：“提取这个 Merlin job 的 YAML”“把这份 `trial.yaml` 重提到 `seed-cn`”“看这个 Merlin tracking run 的 config/summary”“根据 job id 找 tracking 链接”“拉这个 Merlin trial 的 stdout/stderr”“查这个 trial 为什么还在排队”
 - Helix 模型与 AI 任务生命周期，当前覆盖 Video AIPF 数据准备、训练/评估提交、状态查询、停止和记录查询：`helix`
@@ -134,8 +133,10 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
   - 例子：“列出 Spark space”“按业务线 bid 列 link”“某个 space 下的 link”“拿某个 link 的完整 raw（含所有 version 与原始 deployConfig）用 `link get`”“要最新已发布 version + 解析后的 schema（含 schemaUrl / bundle / bundlePath）用 `link summary`”“列某个 link 的 env 配置”“给 link 设置 PPE env，先 `--dry-run` 看 payload 再真实执行”“删除某个 env”“指定非默认 `--app-id`”
 - Kross 多平台容器环境（workload）列表、创建、容器内远程执行与文件传输：`kross`
   - 例子：“先用 `kross workspace list` 看我有哪些 workspace，再用 `kross template list` 查这个 workspace 在当前 cluster 下可用模板，然后用 `kross workload list` 看这个 workspace 下已有 workload，最后直接创建 job workload；quick create 默认会带 1000m CPU / 2048 MB memory / 300 秒 timeout / 自动删除”“删除某个 workload”“通过 webshell 在 workload 容器里执行命令”“上传或下载 workload 容器文件”
-- 日志、监控、告警、Dashboard、App 异常趋势、App/OS symbol、Redis / ABase / Kafka / RocketMQ / EventBus：`log`、`apm`（子组：`service`/`redis`）、`slardar`（子组：`web`/`app`/`os`）、`cache`、`abase`、`bmq`、`rmq`、`eventbus`
-  - 例子：”查这个 logid””先看某个接口的总体瓶颈””按 logid 看链路各节点延迟””看 Redis 大 key””分析这个告警页””根据 Slardar dashboard URL 看看板配置或改标题””用 Slardar App issue URL retrace native 栈””用 Slardar OS issue URL 解析主线程 native 栈””搜索 RocketMQ topic””查看 RocketMQ consumer group 列表”
+- 日志、Footprint/TCE pod 文件日志、Megatron/Primus 日志 URL 下载、监控、告警、Dashboard、App 异常趋势、App/OS symbol、Redis / ABase / Kafka / RocketMQ / EventBus、Vela 单机指标：`log`（Footprint 入口是 `log footprint`）、`apm`（子组：`service`/`redis`）、`slardar`（子组：`web`/`app`/`os`）、`vela`（子组：`one-machine`）、`cache`、`abase`、`bmq`、`eventbus-cn`、`rmq`
+  - 例子：”查这个 logid””下载这个 Footprint / mljob-log-proxy 日志 URL””tail 这个 Footprint pod 日志文件””先看某个接口的总体瓶颈””按 logid 看链路各节点延迟””看 Redis 大 key””分析这个告警页””查这个 Vela one-machine 页面里的指标””根据 Slardar dashboard URL 看看板配置或改标题””用 Slardar App issue URL retrace native 栈””用 Slardar OS issue URL 解析主线程 native 栈””搜索 RocketMQ topic””查看 RocketMQ consumer group 列表”
+- ByteDog profiling：`bytedog`
+  - 例子：”采一个 CPU 火焰图””分析这个 ByteDog URL 的 profile 结果””查历史 profiling 任务””先查这个 pod 里的 PID””分析 pthread 锁竞争””看 jemalloc 内存分配火焰图”
 - Libra / DataTester A/B 实验、指标组、指标组模版：`libra`
   - 例子：“看这个实验详情”“查这个 flight 的报告”“根据 template 页面 URL 查看 metric-group template”
 - Tesla RM 自动化测试平台：测试任务触发/查询/run 等待、列表、失败归因，测试计划 CRUD 与统计：`tesla`
@@ -161,6 +162,7 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 ## Common inputs
 
 - 如果用户给的是 MR / issue / 文档 / 配置 / 告警控制台 URL，优先直接用 URL，不要先手拆 ID。
+- 如果用户只说 Footprint，或给出 `footprint.tiktok-row.net`、Primus `redirect_log.html`、`mljob-log-proxy` URL，直接进入 Log 领域并使用 `bytedcli log footprint ...`；当前 CLI 没有顶层 `bytedcli footprint`。
 - 如果任务是 Meego，优先直接使用工作项 / 视图 URL；很多命令支持 `--url` 自动回填 `project_key`、`work_item_id`、`view_id` 等标识。
 - 如果用户给的是仓库目录上下文，优先让 Codebase 自动从当前 `origin` 推断仓库；当前支持 `code.byted.org` 和 `code-tx.byted.org` remote。如果推断失败，CLI 会继续说明是非 Git 仓库、缺少 `origin`、host 不支持，还是 remote 无法解析。
 - 如果任务跨站点，先确认 `--site` 或 `BYTEDCLI_CLOUD_SITE`。
@@ -202,6 +204,7 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - Helix: [references/subskills/bytedance-helix/GUIDE.md](references/subskills/bytedance-helix/GUIDE.md)
 - Holmes TBase: [references/subskills/bytedance-holmes-tbase/GUIDE.md](references/subskills/bytedance-holmes-tbase/GUIDE.md)
 - Byterec Indexservice: [references/subskills/bytedance-byterec-indexservice/GUIDE.md](references/subskills/bytedance-byterec-indexservice/GUIDE.md)
+- AI Dev Pro AFS: [references/subskills/bytedance-ai-dev-pro/GUIDE.md](references/subskills/bytedance-ai-dev-pro/GUIDE.md)
 - Recall Center: [references/subskills/bytedance-recall-center/GUIDE.md](references/subskills/bytedance-recall-center/GUIDE.md)
 - AI Dev Pro AFS: [references/subskills/bytedance-ai-dev-pro/GUIDE.md](references/subskills/bytedance-ai-dev-pro/GUIDE.md)
 - Fornax: [references/subskills/bytedance-fornax/GUIDE.md](references/subskills/bytedance-fornax/GUIDE.md)
@@ -211,9 +214,11 @@ VA / Maliva / 生产开发机上，调 i18n-tt / i18n-bd / sg 命令前先 `expo
 - SmartQ / TestIDE: [references/subskills/bytedance-smartq/GUIDE.md](references/subskills/bytedance-smartq/GUIDE.md)
 - FaaS: [references/subskills/bytedance-faas/GUIDE.md](references/subskills/bytedance-faas/GUIDE.md)
 - TAE / AI PaaS: [references/subskills/bytedance-tae/GUIDE.md](references/subskills/bytedance-tae/GUIDE.md)
-- Log: [references/subskills/bytedance-log/GUIDE.md](references/subskills/bytedance-log/GUIDE.md)
+- Log / Footprint: [references/subskills/bytedance-log/GUIDE.md](references/subskills/bytedance-log/GUIDE.md)
 - Archer: [references/subskills/bytedance-archer/GUIDE.md](references/subskills/bytedance-archer/GUIDE.md)
+- ByteDog: [references/subskills/bytedance-bytedog/GUIDE.md](references/subskills/bytedance-bytedog/GUIDE.md)
 - Slardar: [references/subskills/bytedance-slardar/GUIDE.md](references/subskills/bytedance-slardar/GUIDE.md)
+- Vela: [references/subskills/bytedance-vela/GUIDE.md](references/subskills/bytedance-vela/GUIDE.md)
 - Devflow: [references/subskills/bytedance-devflow/GUIDE.md](references/subskills/bytedance-devflow/GUIDE.md)
 - Safe: [references/subskills/bytedance-safe/GUIDE.md](references/subskills/bytedance-safe/GUIDE.md)
 - Life: [references/subskills/bytedance-data-life-live/GUIDE.md](references/subskills/bytedance-data-life-live/GUIDE.md)

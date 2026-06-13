@@ -8,7 +8,7 @@ description: "通过 bytedcli 操作 ByteCloud Oncall Platform。适用于查询
 当任务涉及 ByteCloud Oncall Platform 的工单查询或服务台管理时，优先使用 `bytedcli oncall`：
 
 - `flow list`：列出 oncall 工单，支持按发起人、处理人、服务台 ID、问题 region、关键词、是否已解决等过滤。
-- `flow get`：获取单个 oncall 工单详情。
+- `flow get`：获取单个 oncall 工单详情；需要 GPT 摘要时追加 `--with-gpt-summary`。
 - `tenant search`：按关键词搜索服务台。
 - `tenant list`：列出当前用户关联的服务台。
 - `tenant get`：获取服务台详情。
@@ -43,6 +43,9 @@ bytedcli oncall flow list --keyword example-query
 # 查看单个 oncall 详情
 bytedcli oncall flow get --id 100000000001
 
+# 查看单个 oncall 详情并获取 GPT 摘要
+bytedcli oncall flow get --id 100000000001 --with-gpt-summary
+
 # 搜索服务台
 bytedcli oncall tenant search --keyword example-service
 
@@ -67,10 +70,12 @@ bytedcli oncall meta sources
 ```bash
 bytedcli --json oncall flow list --originator example-user --page-size 50
 bytedcli --json oncall flow get --id 100000000001
+bytedcli --json oncall flow get --id 100000000001 --with-gpt-summary
 ```
 
 ## Agent Guidance
 
 - `flow list` 命令的 `--tenant-id` 与 `--region` 都支持重复传入多个值，也支持逗号分隔。
+- `flow get --with-gpt-summary` 会在返回数据中追加 `gpt_summary`，常用字段是 `content`、`summary_result`、`summary_id`、`source`。
 - 默认站点为 `cn`，可通过 `--site boe` 切换到 BOE 环境。
 - 工单 ID 是数字格式（如 100000000001），不是 ticket_xxx 格式（后者属于 Lark Oncall）。

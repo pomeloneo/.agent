@@ -48,7 +48,13 @@ bytedcli clickhouse attr update [options]    # 改表级属性（TTL / 描述 / 
 | `--business-contact <user>`                   | `[authority-admin]`         | 业务联系人，可重复传入。                                                                                                    |
 | `--ch-table-owner <user>`                     | authority-admin             | ClickHouse 表 owner。                                                                                                       |
 | `--apply-desc <desc>`                         | `""`                        | 申请说明。                                                                                                                  |
-| `-r, --region <region>`                       | `cn`                        | 支持 `cn` / `sg` / `va` 三个已抓包验证的区域。sg/va 必须搭配全局 `--site i18n-tt`；详见下方"区域与 --site 约定"。           |
+| `--alias <text>`                              | —                           | 资产中文别名（DataLeap web 表单字段，**`--region mycis` 必填**）。                                                          |
+| `--comment <text>`                            | —                           | 资产中文描述。                                                                                                              |
+| `--comment-en <text>`                         | —                           | 资产英文描述。                                                                                                              |
+| `--business-line <line>`                      | —                           | 业务线标签，例如 `demo-business-line`（**`--region mycis` 必填**）。                                                        |
+| `--data-layer <layer>`                        | —                           | 数据分层标签，例如 `demo-data-layer`（**`--region mycis` 必填**）。                                                         |
+| `--storage-strategy <strategy>`               | —                           | 存储策略标签，例如 `demo-storage-strategy`（**`--region mycis` 必填**）。                                                   |
+| `-r, --region <region>`                       | `cn`                        | 支持 `cn` / `sg` / `va` / `mycis` 四个已抓包验证的区域。sg/va 必须搭配全局 `--site i18n-tt`，mycis 必须搭配 `--site i18n-bd`；详见下方"区域与 --site 约定"。 |
 
 ## 典型场景
 
@@ -165,8 +171,8 @@ bytedcli -j --site i18n-tt clickhouse db get --region va --database demo_db
 
 | 参数                    | 说明                                       |
 | ----------------------- | ------------------------------------------ |
-| `--database <db>`       | 必填，数据库名。                           |
-| `-r, --region <region>` | 可选，默认 `cn`。支持 `cn` / `sg` / `va`。 |
+| `--database <db>`       | 必填，数据库名。                                              |
+| `-r, --region <region>` | 可选，默认 `cn`。支持 `cn` / `sg` / `va` / `mycis`。mycis 需配 `--site i18n-bd`。 |
 
 输出字段：
 
@@ -259,7 +265,7 @@ bytedcli --site i18n-tt clickhouse field update \
 | `--primary-key <keys>`    | 可选，主键列列表，逗号分隔（例：`metric_id,date,project_name`）。主键列不会被自动 Nullable 包裹。在 `--append-fields` 模式下若不传此参数，CLI 会自动保留线上已有的 primaryKey，不会清空。 |
 | `--no-auto-nullable`      | 可选，关闭“非主键列自动包 `Nullable(...)`”的默认行为，让 `--fields` 里的 `type` 原样下发。                                                                                                |
 | `--no-force-update`       | 可选，关闭 `forceUpdate`（默认是 `true`，与 DataLeap web 端一致）。                                                                                                                       |
-| `-r, --region <region>`   | 可选，默认 `cn`。支持 `cn` / `sg` / `va`。sg / va 必须配套全局 `--site i18n-tt`。                                                                                                         |
+| `-r, --region <region>`   | 可选，默认 `cn`。支持 `cn` / `sg` / `va` / `mycis`。sg / va 必须配套全局 `--site i18n-tt`，mycis 必须配套 `--site i18n-bd`。                                                                                                         |
 
 要点：
 
@@ -387,7 +393,7 @@ bytedcli --site i18n-tt clickhouse attr update \
 | `--authority-admin <sso>`  | 可选。权限管理员（单个 SSO 用户，非空字符串）。                                                                                                             |
 | `--security-level <level>` | 可选。安全等级，取值 `1` / `2` / `3`（对应 DataLeap `securityTag.currentSecurityLevel`）。                                                                  |
 | `--is-core <bool>`         | 可选。核心资产标记，取值 `true` / `false`（字符串）。                                                                                                       |
-| `-r, --region <region>`    | 可选，默认 `cn`。支持 `cn` / `sg` / `va`。sg / va 必须配套全局 `--site i18n-tt`。                                                                           |
+| `-r, --region <region>`    | 可选，默认 `cn`。支持 `cn` / `sg` / `va` / `mycis`。sg / va 必须配套全局 `--site i18n-tt`，mycis 必须配套 `--site i18n-bd`。                                                                           |
 
 约束：必须至少传 1 个上面带 "可选" 标记的属性 option，否则 CLI 会直接报错，不会发请求。
 
@@ -541,7 +547,7 @@ JSON 模式输出示例：
 | `cn`       | `default`                 | 默认（`--site cn`）  |
 | `sg`       | `alisg`                   | **`--site i18n-tt`** |
 | `va`       | `i18n`                    | **`--site i18n-tt`** |
-| `mycis`    | `mycis`                   | **`--site i18n-bd`** |
+| `mycis`    | `pinnacle`                | **`--site i18n-bd`** |
 
 **为什么 sg/va 必须加 `--site i18n-tt`**：
 
@@ -567,4 +573,6 @@ JSON 模式输出示例：
 - **`authority-admin` 无法解析**：当前未登录 SSO，或 SSO token 过期。显式传 `--authority-admin <user>` 或先执行 `bytedcli auth login`。
 - **字段重复校验失败**：`--fields` 与 `--partition-keys` 内部不允许重复列名；两边也不允许重名。先本地合并去重再提交。
 - **`CoralNG ClickHouse modify fields failed`（改字段阶段）**：多半是 `--guid` 传错或与 `--region` 不匹配（比如 `sg` 表的 GUID 用 `--region cn` 去 PUT）。先用 `bytedcli hive get --guid <guid> -r <region>` 确认表确实在目标 region。
-- **需要使用新区域（gcp / mycis 等）**：CLI 目前只支持 `cn` / `sg` / `va`。新区域的 `body.region` 与 `bulkCids` 都不能从 URL 路径猜（早期 `va` 被错估为 `"va"`，真实值是 `"i18n"`）；请先在 DataLeap web 端抓一次 `CreateClickhouseTable` + `repositories/info/bulk` 请求，拿到真实值后再在 `src/api/clickhouse/site.ts`、`types.ts`、`parsers.ts` 补进来。
+- **`--region mycis` 报 `CLICKHOUSE_INPUT_ERROR: --region mycis requires --alias, --business-line, --data-layer, --storage-strategy`**：DataLeap mycis web 表单把这 4 项都标了必填，缺一会被网关 async 模式静默吞掉，CLI 在前置校验里直接拒绝并给出可复制的 `--alias demo-alias --business-line demo-business-line --data-layer demo-data-layer --storage-strategy demo-storage-strategy` 提示。
+- **`--region mycis` 报 `unknown shard key column: cityHash64(<col>)` / `unknown primary key column: cityHash64(<col>)`**：mycis 后端校验 `--shard-key` / `--primary-key` / `--sample-key` 时只接受**纯列名**，不接受 `cityHash64(...)` / `sipHash64(...)` 这类哈希表达式（即便源表 `Distributed` engine 元数据里展示的是 hash 表达式）。把 hash 包裹去掉、传纯列名重试即可。
+- **需要使用新区域（gcp 等）**：CLI 目前只支持 `cn` / `sg` / `va` / `mycis`。新区域的 `body.region` 与 `bulkCids` 都不能从 URL 路径猜（早期 `va` 被错估为 `"va"` 真实值是 `"i18n"`，`mycis` 被错估为 `"mycis"` 真实值是 `"pinnacle"`）；请先在 DataLeap web 端抓一次 `CreateClickhouseTable` + `repositories/info/bulk` 请求，拿到真实值后再在 `src/api/clickhouse/site.ts`、`types.ts`、`parsers.ts` 补进来。

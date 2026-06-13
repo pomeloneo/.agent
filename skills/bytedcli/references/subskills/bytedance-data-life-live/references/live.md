@@ -2,22 +2,23 @@
 
 ## 命令列表
 
-### `bytedcli datalive live-room list`
+### `bytedcli data-life-live live-room list`
 
 搜索主播并查询直播记录。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room list [options]
+bytedcli data-life-live live-room list [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--keyword <keyword>` | 搜索关键词（主播昵称） | - | 是 |
-| `--page <page>` | 页码 | 1 | 否 |
-| `--page-size <size>` | 每页大小 | 20 | 否 |
+| 选项                  | 描述                   | 默认值 | 必需 |
+| --------------------- | ---------------------- | ------ | ---- |
+| `--keyword <keyword>` | 搜索关键词（主播昵称） | -      | 是   |
+| `--page <page>`       | 页码                   | 1      | 否   |
+| `--page-size <size>`  | 每页大小               | 20     | 否   |
 
 **示例**：
 
@@ -29,47 +30,47 @@ bytedcli auth status
 bytedcli auth login
 
 # 搜索关键词为"主播"的主播
-bytedcli datalive live-room list --keyword "主播"
+bytedcli data-life-live live-room list --keyword "主播"
 
 # 自定义每页大小
-bytedcli datalive live-room list --keyword "主播" --page-size 50
+bytedcli data-life-live live-room list --keyword "主播" --page-size 50
 
 # 以 JSON 格式输出
-bytedcli --json datalive live-room list --keyword "主播"
+bytedcli --json data-life-live live-room list --keyword "主播"
 
 # 获取直播间详细信息
-bytedcli datalive live-room get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room get --room-id "example-room-id-123456"
 
 # 获取直播间成交情况
-bytedcli datalive live-room key-index --room-id "example-room-id-123456"
+bytedcli data-life-live live-room key-index --room-id "example-room-id-123456"
 
 # 以 JSON 格式输出成交情况
-bytedcli --json datalive live-room key-index --room-id "example-room-id-123456"
+bytedcli --json data-life-live live-room key-index --room-id "example-room-id-123456"
 
 # 获取直播间分钟级趋势数据
-bytedcli datalive live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
+bytedcli data-life-live live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
 
 # 以 JSON 格式输出分钟级趋势数据
-bytedcli --json datalive live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
+bytedcli --json data-life-live live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
 
 # 搜索直播间并获取详细信息（完整流程）
 # 1. 搜索直播间
-bytedcli datalive live-room list --keyword "示例主播" --page-size 10
+bytedcli data-life-live live-room list --keyword "示例主播" --page-size 10
 # 2. 让用户从搜索结果中选择一个直播间 ID
 # 3. 获取直播间详细信息
-bytedcli datalive live-room get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room get --room-id "example-room-id-123456"
 # 4. 获取直播间成交情况
-bytedcli datalive live-room key-index --room-id "example-room-id-123456"
+bytedcli data-life-live live-room key-index --room-id "example-room-id-123456"
 # 5. 获取直播间转化漏斗数据
-bytedcli datalive live-room conversion-funnel --room-id "example-room-id-123456"
+bytedcli data-life-live live-room conversion-funnel --room-id "example-room-id-123456"
 # 6. 获取直播间用户画像数据
-bytedcli datalive live-room portrait --room-id "example-room-id-123456"
+bytedcli data-life-live live-room portrait summary get --room-id "example-room-id-123456"
 # 7. 获取直播间流量来源数据
-bytedcli datalive live-room flow --room-id "example-room-id-123456"
+bytedcli data-life-live live-room flow summary get --room-id "example-room-id-123456"
 # 8. 获取直播间关注商品数据
-bytedcli datalive live-room follow-product --room-id "example-room-id-123456"
+bytedcli data-life-live live-room product follow get --room-id "example-room-id-123456"
 # 9. 获取直播间分钟级趋势数据
-bytedcli datalive live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
+bytedcli data-life-live live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
 ```
 
 **输出说明**：
@@ -121,143 +122,345 @@ bytedcli datalive live-room room-minute-indicator --room-id "example-room-id-123
 }
 ```
 
-### `bytedcli datalive live-room info`
+### `bytedcli data-life-live live-room info`
 
 获取直播间详细信息。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room info [options]
+bytedcli data-life-live live-room info [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room key-index`
+### `bytedcli data-life-live live-room key-index`
 
 获取直播间成交情况数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room key-index [options]
+bytedcli data-life-live live-room key-index [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room info`
+### `bytedcli data-life-live live-room info`
 
 获取直播间详细信息。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room info [options]
+bytedcli data-life-live live-room info [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room key-index`
+### `bytedcli data-life-live live-room key-index`
 
 获取直播间成交情况数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room key-index [options]
+bytedcli data-life-live live-room key-index [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room conversion-funnel`
+### `bytedcli data-life-live live-room conversion-funnel`
 
 获取直播间转化漏斗数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room conversion-funnel [options]
+bytedcli data-life-live live-room conversion-funnel [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room portrait`
+### `bytedcli data-life-live live-room portrait summary get`
 
 获取直播间用户画像数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room portrait [options]
+bytedcli data-life-live live-room portrait summary get [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room flow`
+### `bytedcli data-life-live live-room flow summary get`
 
 获取直播间流量来源数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room flow [options]
+bytedcli data-life-live live-room flow summary get [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
 
-### `bytedcli datalive live-room follow-product`
+### `bytedcli data-life-live live-room product follow get`
 
 获取直播间关注商品数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room follow-product [options]
+bytedcli data-life-live live-room product follow get [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
-| `--minute <minute>` | 分钟数 | - | 否 |
+| 选项                      | 描述                        | 默认值       | 必需 |
+| ------------------------- | --------------------------- | ------------ | ---- |
+| `--room-id <id>`          | 直播间 ID                   | -            | 是   |
+| `--minute <minute>`       | 分钟数                      | `0`          | 否   |
+| `--placement <placement>` | 商品位置，例如 `front_page` | `front_page` | 否   |
 
-### `bytedcli datalive live-room room-minute-indicator`
+### `bytedcli data-life-live live-room product list`
+
+获取直播间商品列表。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room product list [options]
+```
+
+**选项**：
+
+| 选项                | 描述      | 默认值 | 必需 |
+| ------------------- | --------- | ------ | ---- |
+| `--room-id <id>`    | 直播间 ID | -      | 是   |
+| `--minute <minute>` | 分钟偏移  | `0`    | 否   |
+
+### `bytedcli data-life-live live-room gmv disassemble get`
+
+获取直播间 GMV 拆解数据。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room gmv disassemble get [options]
+```
+
+**选项**：
+
+| 选项                   | 描述                  | 默认值 | 必需 |
+| ---------------------- | --------------------- | ------ | ---- |
+| `--room-id <id>`       | 直播间 ID             | -      | 是   |
+| `--config-type <type>` | 配置类型，例如 `peer` | `peer` | 否   |
+
+### `bytedcli data-life-live live-room flow entrance-detail get`
+
+获取直播间流量入口详情。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room flow entrance-detail get [options]
+```
+
+**选项**：
+
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
+
+### `bytedcli data-life-live live-room flow index get`
+
+获取直播间流量指标数据。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room flow index get [options]
+```
+
+**选项**：
+
+| 选项                   | 描述                  | 默认值 | 必需 |
+| ---------------------- | --------------------- | ------ | ---- |
+| `--room-id <id>`       | 直播间 ID             | -      | 是   |
+| `--config-type <type>` | 配置类型，例如 `peer` | `peer` | 否   |
+
+### `bytedcli data-life-live live-room product portrait get`
+
+获取直播间商品画像数据。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room product portrait get [options]
+```
+
+**选项**：
+
+| 选项                | 描述      | 默认值 | 必需 |
+| ------------------- | --------- | ------ | ---- |
+| `--room-id <id>`    | 直播间 ID | -      | 是   |
+| `--product-id <id>` | 商品 ID   | -      | 是   |
+
+### `bytedcli data-life-live live-room portrait user-detail get`
+
+获取直播间用户画像详情。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room portrait user-detail get [options]
+```
+
+**选项**：
+
+| 选项                | 描述      | 默认值 | 必需 |
+| ------------------- | --------- | ------ | ---- |
+| `--room-id <id>`    | 直播间 ID | -      | 是   |
+| `--minute <minute>` | 分钟偏移  | `0`    | 否   |
+
+### `bytedcli data-life-live live-room portrait overview get`
+
+获取直播间用户画像概览。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room portrait overview get [options]
+```
+
+**选项**：
+
+| 选项                | 描述      | 默认值 | 必需 |
+| ------------------- | --------- | ------ | ---- |
+| `--room-id <id>`    | 直播间 ID | -      | 是   |
+| `--minute <minute>` | 分钟偏移  | `0`    | 否   |
+
+### `bytedcli data-life-live live-room operation marketing-data get`
+
+获取直播间营销数据。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room operation marketing-data get [options]
+```
+
+**选项**：
+
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
+
+### `bytedcli data-life-live live-room operation punish-info get`
+
+获取直播间处罚信息。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room operation punish-info get [options]
+```
+
+**选项**：
+
+| 选项                | 描述                   | 默认值  | 必需 |
+| ------------------- | ---------------------- | ------- | ---- |
+| `--room-id <id>`    | 直播间 ID              | -       | 是   |
+| `--range-time <ms>` | 查询时间范围，单位毫秒 | `15000` | 否   |
+
+### `bytedcli data-life-live live-room operation explanation-effect get`
+
+获取直播间讲解效果数据。
+
+**用法**：
+
+```bash
+bytedcli data-life-live live-room operation explanation-effect get [options]
+```
+
+**选项**：
+
+| 选项             | 描述      | 默认值 | 必需 |
+| ---------------- | --------- | ------ | ---- |
+| `--room-id <id>` | 直播间 ID | -      | 是   |
+
+### 资源分组诊断命令
+
+诊断能力按资源分组：
+
+```bash
+# GMV 拆解
+bytedcli data-life-live live-room gmv disassemble get --room-id "example-room-id-123456"
+
+# 流量入口详情与流量指标
+bytedcli data-life-live live-room flow entrance-detail get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room flow index get --room-id "example-room-id-123456"
+
+# 商品列表、商品画像、关注商品
+bytedcli data-life-live live-room product list --room-id "example-room-id-123456"
+bytedcli data-life-live live-room product portrait get --room-id "example-room-id-123456" --product-id "example-product-id"
+bytedcli data-life-live live-room product follow get --room-id "example-room-id-123456"
+
+# 用户画像详情/概览、营销、处罚与讲解效果
+bytedcli data-life-live live-room portrait user-detail get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room portrait overview get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room operation marketing-data get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room operation punish-info get --room-id "example-room-id-123456"
+bytedcli data-life-live live-room operation explanation-effect get --room-id "example-room-id-123456"
+```
+
+### `bytedcli data-life-live live-room room-minute-indicator`
 
 获取直播间分钟级趋势数据。
 
 **用法**：
+
 ```bash
-bytedcli datalive live-room room-minute-indicator [options]
+bytedcli data-life-live live-room room-minute-indicator [options]
 ```
 
 **选项**：
 
-| 选项 | 描述 | 默认值 | 必需 |
-|------|------|--------|------|
-| `--room-id <id>` | 直播间 ID | - | 是 |
-| `--fields <fields>` | 逗号分隔的字段列表，例如："pay_order_gmv_minute_trend,pay_order_cnt_minute_trend" | - | 是 |
-| `--size <size>` | 分钟级点数量 | - | 否 |
+| 选项                | 描述                                                                              | 默认值 | 必需 |
+| ------------------- | --------------------------------------------------------------------------------- | ------ | ---- |
+| `--room-id <id>`    | 直播间 ID                                                                         | -      | 是   |
+| `--fields <fields>` | 逗号分隔的字段列表，例如："pay_order_gmv_minute_trend,pay_order_cnt_minute_trend" | -      | 是   |
+| `--size <size>`     | 分钟级点数量                                                                      | -      | 否   |
 
 ## 登录问题解决
 
@@ -268,11 +471,12 @@ Datalive API 需要登录才能访问。当执行命令遇到未登录错误（`
 bytedcli auth login
 
 # 登录后自动重新执行原命令
-bytedcli datalive live-room list --keyword "主播"
+bytedcli data-life-live live-room list --keyword "主播"
 ```
 
 **站点切换**：
 如果需要访问不同站点的 Datalive，请使用 `--site` 参数：
+
 ```bash
 # 切换到 cn 站点并自动登录
 bytedcli --site cn auth login
@@ -282,28 +486,33 @@ bytedcli --site cn datalive live-room list --keyword "主播"
 ## 常见问题
 
 ### Q: 为什么返回的直播记录为空？
+
 A: 可能是因为该主播近期没有直播记录，或者 API 没有返回相关数据。
 
 ### Q: 为什么搜索结果与预期不符？
+
 A: 请检查关键词是否正确，API 可能会对关键词进行模糊匹配。
 
 ### Q: 如何获取更多直播记录？
+
 A: 目前 API 只返回部分直播记录，无法获取全部历史记录。
 
 ### Q: 如何搜索直播间并获取详细信息？
+
 A: 可以按照以下流程操作：
+
 1. 检查登录状态：`bytedcli auth status`
 2. 如果未登录，执行登录：`bytedcli auth login`
-3. 搜索直播间获取列表：`bytedcli datalive live-room list --keyword "关键词" --page-size 10`
+3. 搜索直播间获取列表：`bytedcli data-life-live live-room list --keyword "关键词" --page-size 10`
 4. 从搜索结果中选择一个直播间，记录其 room_id
 5. **只有在用户选定直播间 ID 后**，才执行以下操作：
-   - 获取选定直播间的详细信息：`bytedcli datalive live-room info --room-id "选定的room_id"`
-   - 获取直播间成交情况：`bytedcli datalive live-room key-index --room-id "选定的room_id"`
-   - 获取直播间转化漏斗数据：`bytedcli datalive live-room conversion-funnel --room-id "选定的room_id"`
-   - 获取直播间用户画像数据：`bytedcli datalive live-room portrait --room-id "选定的room_id"`
-   - 获取直播间流量来源数据：`bytedcli datalive live-room flow --room-id "选定的room_id"`
-   - 获取直播间关注商品数据：`bytedcli datalive live-room follow-product --room-id "选定的room_id"`
-   - 获取直播间分钟级趋势数据：`bytedcli datalive live-room room-minute-indicator --room-id "选定的room_id" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"`
+   - 获取选定直播间的详细信息：`bytedcli data-life-live live-room info --room-id "选定的room_id"`
+   - 获取直播间成交情况：`bytedcli data-life-live live-room key-index --room-id "选定的room_id"`
+   - 获取直播间转化漏斗数据：`bytedcli data-life-live live-room conversion-funnel --room-id "选定的room_id"`
+   - 获取直播间用户画像数据：`bytedcli data-life-live live-room portrait summary get --room-id "选定的room_id"`
+   - 获取直播间流量来源数据：`bytedcli data-life-live live-room flow summary get --room-id "选定的room_id"`
+   - 获取直播间关注商品数据：`bytedcli data-life-live live-room product follow get --room-id "选定的room_id"`
+   - 获取直播间分钟级趋势数据：`bytedcli data-life-live live-room room-minute-indicator --room-id "选定的room_id" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"`
 6. **未选定直播间 ID 前**，不执行任何直播间详情查询操作
 
 ---
@@ -318,7 +527,7 @@ A: 可以按照以下流程操作：
   ```bash
   bytedcli auth status
   bytedcli auth login
-  bytedcli datalive live-room list --keyword "张三"
+  bytedcli data-life-live live-room list --keyword "张三"
   ```
 
 ### 示例 2：查询直播记录
@@ -329,7 +538,7 @@ A: 可以按照以下流程操作：
   ```bash
   bytedcli auth status
   bytedcli auth login
-  bytedcli datalive live-room list --keyword "李四"
+  bytedcli data-life-live live-room list --keyword "李四"
   ```
 
 ### 示例 3：查询直播间成交情况
@@ -340,7 +549,7 @@ A: 可以按照以下流程操作：
   ```bash
   bytedcli auth status
   bytedcli auth login
-  bytedcli datalive live-room key-index --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room key-index --room-id "example-room-id-123456"
   ```
 
 ### 示例 4：查询直播间交易趋势
@@ -352,7 +561,7 @@ A: 可以按照以下流程操作：
   ```bash
   bytedcli auth status
   bytedcli auth login
-  bytedcli datalive live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
+  bytedcli data-life-live live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
   ```
 
 ### 示例 5：完整的直播间分析流程
@@ -364,23 +573,23 @@ A: 可以按照以下流程操作：
   bytedcli auth status
   bytedcli auth login
   # 搜索直播间
-  bytedcli datalive live-room list --keyword "示例主播" --page-size 10
+  bytedcli data-life-live live-room list --keyword "示例主播" --page-size 10
   # 让用户从搜索结果中选择一个直播间 ID
   # 假设用户选择的 room_id 为 example-room-id-123456
   # 获取直播间详细信息
-  bytedcli datalive live-room get --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room get --room-id "example-room-id-123456"
   # 获取直播间成交情况
-  bytedcli datalive live-room key-index --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room key-index --room-id "example-room-id-123456"
   # 获取直播间转化漏斗数据
-  bytedcli datalive live-room conversion-funnel --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room conversion-funnel --room-id "example-room-id-123456"
   # 获取直播间用户画像数据
-  bytedcli datalive live-room portrait --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room portrait summary get --room-id "example-room-id-123456"
   # 获取直播间流量来源数据
-  bytedcli datalive live-room flow --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room flow summary get --room-id "example-room-id-123456"
   # 获取直播间关注商品数据
-  bytedcli datalive live-room follow-product --room-id "example-room-id-123456"
+  bytedcli data-life-live live-room product follow get --room-id "example-room-id-123456"
   # 获取直播间分钟级趋势数据
-  bytedcli datalive live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
+  bytedcli data-life-live live-room room-minute-indicator --room-id "example-room-id-123456" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"
   ```
 
 ---
@@ -404,12 +613,12 @@ Skill 应使用以下方式获取和展示数据：
    - 优点：可以获得结构化数据，便于灵活展示
 
 2. **具体实现逻辑**：
-   - **搜索直播间列表**：使用 `bytedcli --json datalive live-room list --keyword "{user_keyword}" --page-size 10` 获取结构化数据
-   - **用户画像**：使用 `bytedcli --json datalive live-room portrait --room-id "{selected_room_id}"` 获取 JSON 数据
-   - **流量来源**：使用 `bytedcli --json datalive live-room flow --room-id "{selected_room_id}"` 获取 JSON 数据
-   - **转化漏斗**：使用 `bytedcli --json datalive live-room conversion-funnel --room-id "{selected_room_id}"` 获取 JSON 数据
-   - **关注商品**：使用 `bytedcli --json datalive live-room follow-product --room-id "{selected_room_id}"` 获取 JSON 数据
-   - **分钟级趋势**：使用 `bytedcli --json datalive live-room room-minute-indicator --room-id "{selected_room_id}" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"` 获取 JSON 数据
+   - **搜索直播间列表**：使用 `bytedcli --json data-life-live live-room list --keyword "{user_keyword}" --page-size 10` 获取结构化数据
+   - **用户画像**：使用 `bytedcli --json data-life-live live-room portrait summary get --room-id "{selected_room_id}"` 获取 JSON 数据
+   - **流量来源**：使用 `bytedcli --json data-life-live live-room flow summary get --room-id "{selected_room_id}"` 获取 JSON 数据
+   - **转化漏斗**：使用 `bytedcli --json data-life-live live-room conversion-funnel --room-id "{selected_room_id}"` 获取 JSON 数据
+   - **关注商品**：使用 `bytedcli --json data-life-live live-room product follow get --room-id "{selected_room_id}"` 获取 JSON 数据
+   - **分钟级趋势**：使用 `bytedcli --json data-life-live live-room room-minute-indicator --room-id "{selected_room_id}" --fields "pay_order_gmv_minute_trend,pay_order_cnt_minute_trend"` 获取 JSON 数据
 
 ### JSON 数据解析和展示逻辑
 
